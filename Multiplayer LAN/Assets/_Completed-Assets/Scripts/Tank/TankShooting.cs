@@ -54,26 +54,25 @@ namespace Complete
             m_FireAction.performed += OnFire;
         }
 
-
+        [Client]
         // Event called when this player's 'Fire' action is triggered by the New Input System
         public void OnFire(InputAction.CallbackContext obj)
         {
-            if (!isLocalPlayer)
-            {
-                return;
-            }
+            //if (!isLocalPlayer) return;
 
             if (!isDisabled)
             {
                 // When the value read is higher than the default Button Press Point, the key has been pressed
                 if (obj.ReadValue<float>() >= InputSystem.settings.defaultButtonPressPoint)
                 {
-                    Fire();
+                    CmdFire();
                 }
             }
         }
 
-        private void Fire()
+        //[Client]
+        [Command]
+        private void CmdFire()
         {
             // Create an instance of the shell and store a reference to it's rigidbody
             Rigidbody shellInstance;

@@ -72,13 +72,13 @@ namespace Complete
         private IEnumerator GameLoop()
         {
             // Start off by running the 'RoundStarting' coroutine but don't return until it's finished
-            yield return StartCoroutine (RoundStarting());
+            yield return StartCoroutine(RoundStarting());
 
             // Once the 'RoundStarting' coroutine is finished, run the 'RoundPlaying' coroutine but don't return until it's finished
             yield return StartCoroutine (RoundPlaying());
 
             // Once execution has returned here, run the 'RoundEnding' coroutine, again don't return until it's finished
-            yield return StartCoroutine (RoundEnding());
+            yield return StartCoroutine(RoundEnding());
 
             // This code is not run until 'RoundEnding' has finished.  At which point, check if a game winner has been found
             if (m_GameWinner != null)
@@ -109,7 +109,8 @@ namespace Complete
             m_MessageText.text = "ROUND " + m_RoundNumber;
 
             // Wait for the specified length of time until yielding control back to the game loop
-            yield return m_StartWait;
+            //yield return m_StartWait;
+            yield return null;
         }
 
 

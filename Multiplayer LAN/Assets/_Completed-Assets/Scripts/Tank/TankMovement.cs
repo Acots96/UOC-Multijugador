@@ -98,21 +98,25 @@ namespace Complete
 
         private void Update()
         {
+            if (!isLocalPlayer) return;
             EngineAudio();
         }
-
+        
+        [Client]
         // Event called when this player's 'Move' action is triggered by the New Input System
         public void OnTankMove(InputAction.CallbackContext obj)
         {
             m_MovementInputValue = obj.ReadValue<Vector2>().y;
         }
 
+        [Client]
         // Event called when this player's 'Turn' action is triggered by the New Input System
         public void OnTankTurn(InputAction.CallbackContext obj)
         {
             m_TurnInputValue = obj.ReadValue<Vector2>().x;
         }
 
+        [Client]
         private void EngineAudio()
         {
             // If there is no input (the tank is stationary)...
@@ -143,16 +147,13 @@ namespace Complete
 
         private void FixedUpdate()
         {
-            if (!isLocalPlayer)
-            {
-                return;
-            }
+            if (!isLocalPlayer) return;
             // Adjust the rigidbodies position and orientation in FixedUpdate
             Move();
             Turn();
         }
 
-
+        [Client]
         private void Move()
         {
             if (!isDisabled)
@@ -165,7 +166,7 @@ namespace Complete
             }
         }
 
-
+        [Client]
         private void Turn()
         {
             if (!isDisabled)
@@ -178,6 +179,15 @@ namespace Complete
 
                 // Apply this rotation to the rigidbody's rotation
                 m_Rigidbody.MoveRotation(m_Rigidbody.rotation * turnRotation);
+            }
+        }
+
+        public override void OnStartLocalPlayer()
+        {
+
+            foreach (MeshRenderer child in GetComponentsInChildren<MeshRenderer>())
+            {
+                child.material.color = Color.blue;
             }
         }
     }

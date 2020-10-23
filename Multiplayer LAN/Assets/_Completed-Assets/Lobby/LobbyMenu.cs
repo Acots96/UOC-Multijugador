@@ -1,10 +1,15 @@
 ﻿using UnityEngine;
 using Mirror;
+using System;
+using UnityEngine.SceneManagement;
 
-public class LobbyMenu : MonoBehaviour
+public class LobbyMenu : NetworkManager
 {
     private NetworkManager manager;
     public string serverIP = "localhost";
+
+    [SerializeField] private GameObject playerSpawnerSystem = null;
+    private PlayerSpawnerSystem playerSpawnerSystemInstance = null;
 
     void Awake()
     {
@@ -53,18 +58,18 @@ public class LobbyMenu : MonoBehaviour
 
     private void AddressData()
     {
-        if (NetworkServer.active)
-        {
-            Debug.Log("Server: active. IP: " + manager.networkAddress + " - Transport: " + Transport.activeTransport);
-        }
-        else
-        {
-            Debug.Log("Attempted to join server " + serverIP);
-        }
+        //if (NetworkServer.active)
+        //{
+        //    Debug.Log("Server: active. IP: " + manager.networkAddress + " - Transport: " + Transport.activeTransport);
+        //}
+        //else
+        //{
+        //    Debug.Log("Attempted to join server " + serverIP);
+        //}
 
-        Debug.Log("Local IP Address: " + GetLocalIPAddress());
+        //Debug.Log("Local IP Address: " + GetLocalIPAddress());
 
-        Debug.Log("//////////////");
+        //Debug.Log("//////////////");
     }
 
     private static string GetLocalIPAddress()
@@ -79,5 +84,24 @@ public class LobbyMenu : MonoBehaviour
         }
 
         throw new System.Exception("No network adapters with an IPv4 address in the system!");
+    }
+
+    public override void OnServerSceneChanged(string sceneName)
+    {
+        if (sceneName.Contains("_Complete-Game"))
+        {
+            GameObject playerSpawnSystemInstance = Instantiate(playerSpawnerSystem);
+            NetworkServer.Spawn(playerSpawnSystemInstance);
+        }
+    }
+
+    public override void OnServerAddPlayer(NetworkConnection conn)
+    {
+        if (playerSpawnerSystemInstance == null)
+            playerSpawnerSystemInstance = GameObject.FindGameObjectWithTag("PlayerSpawner").GetComponent<PlayerSpawnerSystem>();
+        
+        Transform spawnPoint = playerSpawnerSystemInstance.GetSpawnPoint();
+        GameObject playerPrefab = Instantiate(manager.playerPrefab, spawnPoint.position, spawnPoint.rotation);
+        NetworkServer.AddPlayerForConnection(conn, playerPrefab);
     }
 }
