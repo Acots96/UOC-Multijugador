@@ -47,6 +47,8 @@ namespace Complete
                 // ... set their material color to the color specific to this tank
                 renderers[i].material.color = m_PlayerColor;
             }
+
+            Debug.Log(m_Movement.name);
         }
 
 

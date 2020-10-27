@@ -103,5 +103,7 @@ public class LobbyMenu : NetworkManager
         Transform spawnPoint = playerSpawnerSystemInstance.GetSpawnPoint();
         GameObject playerPrefab = Instantiate(manager.playerPrefab, spawnPoint.position, spawnPoint.rotation);
         NetworkServer.AddPlayerForConnection(conn, playerPrefab);
+        //Complete.GameManager.AddTank(playerPrefab.transform);
     }
+
 }
