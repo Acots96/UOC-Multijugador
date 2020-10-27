@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using Mirror;
+using System.Collections.Generic;
 
 public class EnemySpawner : NetworkBehaviour {
 
@@ -8,15 +9,16 @@ public class EnemySpawner : NetworkBehaviour {
 
 
     public override void OnStartServer() {
-        Debug.Log(Application.persistentDataPath);
-        if (Application.isEditor) {
-            Debug.Log("SERVER? " + isServer);
-        } else {
-            System.IO.File.WriteAllText("D:/UOC/Multi/PEC2/logfile2.txt", "SERVER? " + isServer);
-        }
+        List<Transform> spawnPositions = new List<Transform>();
+        foreach (Transform t in transform)
+            spawnPositions.Add(t);
+
         for (int i = 0; i < numberOfEnemies; i++) {
-            Vector3 spawnPosition = 
-                new Vector3(Random.Range(-8.0f, 8.0f), 0.0f, Random.Range(-8.0f, 8.0f));
+            int idx = Random.Range(0, spawnPositions.Count);
+            Transform t = spawnPositions[idx];
+            spawnPositions.RemoveAt(idx);
+            //
+            Vector3 spawnPosition = t.position;
             Quaternion spawnRotation = 
                 Quaternion.Euler(0.0f, Random.Range(0, 180), 0.0f);
             GameObject enemy = Instantiate(enemyPrefab, spawnPosition, spawnRotation);
