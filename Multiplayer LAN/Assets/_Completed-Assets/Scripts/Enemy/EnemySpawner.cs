@@ -8,6 +8,12 @@ public class EnemySpawner : NetworkBehaviour {
 
 
     public override void OnStartServer() {
+        Debug.Log(Application.persistentDataPath);
+        if (Application.isEditor) {
+            Debug.Log("SERVER? " + isServer);
+        } else {
+            System.IO.File.WriteAllText("D:/UOC/Multi/PEC2/logfile2.txt", "SERVER? " + isServer);
+        }
         for (int i = 0; i < numberOfEnemies; i++) {
             Vector3 spawnPosition = 
                 new Vector3(Random.Range(-8.0f, 8.0f), 0.0f, Random.Range(-8.0f, 8.0f));
