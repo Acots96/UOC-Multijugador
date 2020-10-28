@@ -706,6 +706,7 @@ namespace Mirror
                         {
                             if (identity.sceneId == 0)
                             {
+                                Debug.Log("DESTROY");
                                 Object.Destroy(identity.gameObject);
                             }
                             else
@@ -818,6 +819,7 @@ namespace Mirror
             if (GetPrefab(msg.assetId, out GameObject prefab))
             {
                 GameObject obj = Object.Instantiate(prefab, msg.position, msg.rotation);
+                Debug.Log("SPAWNED: " + obj);
                 if (logger.LogEnabled())
                 {
                     logger.Log("Client spawn handler instantiating [netId:" + msg.netId + " asset ID:" + msg.assetId + " pos:" + msg.position + " rotation: " + msg.rotation + "]");
@@ -921,6 +923,7 @@ namespace Mirror
                     // default handling
                     if (localObject.sceneId == 0)
                     {
+                        Debug.Log("DESTROY");
                         Object.Destroy(localObject.gameObject);
                     }
                     else

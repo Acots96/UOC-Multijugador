@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -22,6 +23,21 @@ namespace Complete
         private TankManager m_RoundWinner;          // Reference to the winner of the current round.  Used to make an announcement of who won
         private TankManager m_GameWinner;           // Reference to the winner of the game.  Used to make an announcement of who won
 
+
+        private static GameManager Instance;
+        private List<Transform> npcsTanks, playersTanks;
+
+
+        private void Awake() {
+            if (Instance) {
+                Destroy(Instance);
+                Instance = null;
+            }
+            Instance = this;
+
+            npcsTanks = new List<Transform>();
+            playersTanks = new List<Transform>();
+        }
 
         private void Start()
         {
@@ -50,21 +66,79 @@ namespace Complete
             }
         }
 
+        private static void AddPlayer(Transform player) {
+            Instance.playersTanks.Add(player);
+        }
+        private static void RemovePlayer(Transform player) {
+            Instance.playersTanks.Remove(player);
+        }
+        private static void AddEnemy(Transform enemy) {
+            Instance.npcsTanks.Add(enemy);
+        }
+        private static void RemoveEnemy(Transform enemy) {
+            Instance.npcsTanks.Remove(enemy);
+        }
+        public static void AddTank(Transform tank) {
+            Debug.Log("ADDING " + tank);
+            if (tank.tag.Equals("Enemy"))
+                AddEnemy(tank);
+            else if (tank.tag.Equals("Player"))
+                AddPlayer(tank);
+            Instance.SetCameraTargets();
+        }
+        public static void RemoveTank(Transform tank) {
+            Debug.Log("REMOVING " + tank);
+            if (tank.tag.Equals("Enemy"))
+                RemoveEnemy(tank);
+            else if (tank.tag.Equals("Player"))
+                RemovePlayer(tank);
+            Instance.SetCameraTargets();
+        }
+        private static void SetEnemies(List<Transform> npcs) {
+            Instance.npcsTanks = npcs;
+            Instance.SetCameraTargets();
+        }
+
+        public static void UpdatePlayersAndPlayers() {
+            List<Transform> players = new List<Transform>();
+            foreach (GameObject go in GameObject.FindGameObjectsWithTag("Player"))
+                players.Add(go.transform);
+            Instance.playersTanks.AddRange(players);
+            List<Transform> npcs = new List<Transform>();
+            foreach (GameObject go in GameObject.FindGameObjectsWithTag("Enemy"))
+                npcs.Add(go.transform);
+            Instance.npcsTanks.AddRange(npcs);
+            Debug.Log(Instance.playersTanks.Count + " , " + Instance.npcsTanks.Count);
+            Instance.SetCameraTargets();
+        }
+
 
         private void SetCameraTargets()
         {
             // Create a collection of transforms the same size as the number of tanks
-            Transform[] targets = new Transform[m_Tanks.Length];
+            //Transform[] targets = new Transform[m_Tanks.Length + npcsTanks.Count];
+            List<Transform> targets = new List<Transform>();
 
             // For each of these transforms...
-            for (int i = 0; i < targets.Length; i++)
+            /*for (int i = 0; i < m_Tanks.Length; i++)
             {
                 // ... set it to the appropriate tank transform
-                targets[i] = m_Tanks[i].m_Instance.transform;
+                targets.Add(m_Tanks[i].m_Instance.transform);
+            }*/
+
+            for (int i = 0; i < playersTanks.Count; i++) {
+                targets.Add(playersTanks[i]);
             }
 
+            for (int i = 0; i < npcsTanks.Count; i++) {
+                targets.Add(npcsTanks[i]);
+            }
+
+            foreach (Transform tr in targets)
+                Debug.Log(tr.gameObject);
+
             // These are the targets the camera should follow
-            m_CameraControl.m_Targets = targets;
+            m_CameraControl.m_Targets = targets.ToArray();
         }
 
 
