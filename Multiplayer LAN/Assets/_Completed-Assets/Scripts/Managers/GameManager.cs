@@ -134,8 +134,8 @@ namespace Complete
                 targets.Add(npcsTanks[i]);
             }
 
-            foreach (Transform tr in targets)
-                Debug.Log(tr.gameObject);
+            //foreach (Transform tr in targets)
+            //    Debug.Log(tr.gameObject);
 
             // These are the targets the camera should follow
             m_CameraControl.m_Targets = targets.ToArray();

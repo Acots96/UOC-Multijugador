@@ -1,23 +1,32 @@
-﻿using UnityEngine;
+﻿using Mirror;
+using UnityEngine;
 using UnityEngine.UI;
 
 namespace Complete
 {
-    public class TankHealth : MonoBehaviour
+    public class TankHealth : NetworkBehaviour
     {
-        public float m_StartingHealth = 100f;               // The amount of health each tank starts with
+        public const float m_StartingHealth = 100f;               // The amount of health each tank starts with
         public Slider m_Slider;                             // The slider to represent how much health the tank currently has
         public Image m_FillImage;                           // The image component of the slider
         public Color m_FullHealthColor = Color.green;       // The color the health bar will be when on full health
         public Color m_ZeroHealthColor = Color.red;         // The color the health bar will be when on no health
         public GameObject m_ExplosionPrefab;                // A prefab that will be instantiated in Awake, then used whenever the tank dies
-        
+
         
         private AudioSource m_ExplosionAudio;               // The audio source to play when the tank explodes
         private ParticleSystem m_ExplosionParticles;        // The particle system the will play when the tank is destroyed
-        private float m_CurrentHealth;                      // How much health the tank currently has
+        
+        [SyncVar(hook = "OnChangeHealth")]
+        public float m_CurrentHealth = m_StartingHealth;                      // How much health the tank currently has
+        
         private bool m_Dead;                                // Has the tank been reduced beyond zero health yet?
 
+
+        public bool destroyOnDeath = false;
+        
+        private NetworkStartPosition[] spawnPoints;
+        private PlayerSpawnerSystem playerSpawnerSystem;
 
         private void Awake ()
         {
@@ -31,6 +40,27 @@ namespace Complete
             m_ExplosionParticles.gameObject.SetActive (false);
         }
 
+        private void Start()
+        {
+            if (isLocalPlayer)
+            {
+                spawnPoints = FindObjectsOfType<NetworkStartPosition>();
+                SetPlayerSpawnerSystem();
+            }
+        }
+
+        private void SetPlayerSpawnerSystem()
+        {
+            playerSpawnerSystem = GameObject.FindGameObjectWithTag("PlayerSpawner").GetComponent<PlayerSpawnerSystem>();
+        }
+
+        private Vector3 GetPlayerSpawnPoint()
+        {
+            if (playerSpawnerSystem == null) SetPlayerSpawnerSystem();
+
+            Transform nextSpawnTransform = playerSpawnerSystem.GetNextSpawnTransform();
+            return nextSpawnTransform.position;
+        }
 
         private void OnEnable()
         {
@@ -45,6 +75,11 @@ namespace Complete
 
         public void TakeDamage (float amount)
         {
+            if (!isServer)
+            {
+                return;
+            }
+
             // Reduce current health by the amount of damage done
             m_CurrentHealth -= amount;
 
@@ -69,6 +104,17 @@ namespace Complete
         }
 
 
+        private void OnChangeHealth(float oldHealth, float newHealth)
+        {
+            m_CurrentHealth = newHealth;
+            
+            // Set the slider's value appropriately
+            m_Slider.value = m_CurrentHealth;
+
+            // Interpolate the color of the bar between the choosen colours based on the current percentage of the starting health
+            m_FillImage.color = Color.Lerp(m_ZeroHealthColor, m_FullHealthColor, m_CurrentHealth / m_StartingHealth);
+        }
+
         private void OnDeath ()
         {
             // Set the flag so that this function is only called once
@@ -84,8 +130,35 @@ namespace Complete
             // Play the tank explosion sound effect
             m_ExplosionAudio.Play();
 
+            if (destroyOnDeath)
+            {
+                Destroy(gameObject);
+                return;
+            }
+
+            m_CurrentHealth = m_StartingHealth;
+
             // Turn the tank off
-            gameObject.SetActive (false);
+            //gameObject.SetActive (false);
+            RpcRespawn();
+            m_Dead = false;
+        }
+
+        [ClientRpc]
+        void RpcRespawn()
+        {
+            Vector3 spawnPoint = GetPlayerSpawnPoint();
+            // Set the spawn point to origin as a default value
+            //Vector3 spawnPoint = Vector3.zero;
+
+            // If there is a spawn point array and the array is not empty, pick a spawn point at random
+            //if (spawnPoints != null && spawnPoints.Length > 0)
+            //{
+            //    spawnPoint = spawnPoints[Random.Range(0, spawnPoints.Length)].transform.position;
+            //}
+
+            // Set the player's position to the chosen spawn point
+            transform.position = spawnPoint;
         }
     }
 }

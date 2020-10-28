@@ -58,7 +58,7 @@ namespace Complete
         // Event called when this player's 'Fire' action is triggered by the New Input System
         public void OnFire(InputAction.CallbackContext obj)
         {
-            //if (!isLocalPlayer) return;
+            if (!isLocalPlayer) return;
 
             if (!isDisabled)
             {

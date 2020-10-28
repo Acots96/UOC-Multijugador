@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Mirror;
 using System.Linq;
+using System;
 
 public class PlayerSpawnerSystem : NetworkBehaviour
 {
@@ -32,4 +33,11 @@ public class PlayerSpawnerSystem : NetworkBehaviour
         return spawnPoint;
     }
 
+    public Transform GetNextSpawnTransform()
+    {
+        if (nextIndex >= spawnPoints.Count) nextIndex = 0;
+        Transform spawnPoint = spawnPoints[nextIndex];
+        nextIndex++;
+        return spawnPoint;
+    }
 }
