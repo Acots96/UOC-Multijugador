@@ -23,6 +23,8 @@ namespace Complete
         private InputAction m_FireAction;           // Fire Action reference (Unity 2020 New Input System)
         private bool isDisabled = false;            // To avoid enabling / disabling Input System when tank is destroyed
 
+        public GameObject m_ShellGO;
+
         private void OnEnable()
         {
             // When the tank is turned on, reset the launch force and the UI
@@ -77,7 +79,11 @@ namespace Complete
             // Create an instance of the shell and store a reference to it's rigidbody
             Rigidbody shellInstance;
 
-            shellInstance = Instantiate(m_Shell, m_FireTransform.position, m_FireTransform.rotation) as Rigidbody;
+            GameObject shell = Instantiate(m_ShellGO, m_FireTransform.position, m_FireTransform.rotation);
+            shellInstance = shell.GetComponent<Rigidbody>();
+            NetworkServer.Spawn(shell);
+
+            //shellInstance = Instantiate(m_Shell, m_FireTransform.position, m_FireTransform.rotation) as Rigidbody;
 
             // Set the shell's velocity to the launch force in the fire position's forward direction
             shellInstance.velocity = m_CurrentLaunchForce * m_FireTransform.forward;

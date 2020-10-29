@@ -71,6 +71,11 @@ namespace Complete
 
         private void Start()
         {
+            if (!isLocalPlayer)
+            {
+                ChangeTankMeshColor(Color.red);
+            }
+
             // Store the original pitch of the audio source
             m_OriginalPitch = m_MovementAudio.pitch;
 
@@ -185,9 +190,14 @@ namespace Complete
         public override void OnStartLocalPlayer()
         {
 
+            ChangeTankMeshColor(Color.blue);
+        }
+
+        private void ChangeTankMeshColor(Color color)
+        {
             foreach (MeshRenderer child in GetComponentsInChildren<MeshRenderer>())
             {
-                child.material.color = Color.blue;
+                child.material.color = color;
             }
         }
     }

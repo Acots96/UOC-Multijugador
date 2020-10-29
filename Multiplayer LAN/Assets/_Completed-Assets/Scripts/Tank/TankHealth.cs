@@ -139,15 +139,16 @@ namespace Complete
             m_CurrentHealth = m_StartingHealth;
 
             // Turn the tank off
-            gameObject.SetActive(false);
+            //gameObject.SetActive(false);
             RpcRespawn();
             m_Dead = false;
-            gameObject.SetActive(true);
+            //gameObject.SetActive(true);
         }
 
         [ClientRpc]
         void RpcRespawn()
         {
+            //gameObject.GetComponent<Rigidbody>().velocity = Vector3.zero;
             Vector3 spawnPoint = GetPlayerSpawnPoint();
             transform.position = spawnPoint;
         }
