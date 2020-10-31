@@ -19,7 +19,6 @@ public class TankNaming : NetworkBehaviour
 
     private void SyncPlayerNameUpdate(string oldName, string newName)
     {
-        Debug.Log("HOOK WORKED");
         currentName = newName;
 
         if (newName.Equals("")) currentName = startingName;
