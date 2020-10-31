@@ -7,17 +7,31 @@ using UnityEngine.UI;
 
 public class TankNaming : NetworkBehaviour
 {
-    //public TextMeshProUGUI tmpro_tankName;
+    public TextMeshProUGUI tmpro_tankName;
 
     public const string startingName = "PLAYER";
 
-    public PlayerName playerName;
-
-    //[SyncVar(hook = "OnChangeTankName")]
-    //public string currentName = startingName;
-
     private GameObject input_playerNameGO;
     private InputField inputField_playerName;
+
+    [SyncVar(hook = "SyncPlayerNameUpdate")]
+    private string currentName = startingName;
+
+    private void SyncPlayerNameUpdate(string oldName, string newName)
+    {
+        Debug.Log("HOOK WORKED");
+        currentName = newName;
+
+        if (newName.Equals("")) currentName = startingName;
+
+        // SET TEXT VALUE ON DISPLAY
+        tmpro_tankName.text = currentName;
+    }
+
+    public void SetCurrentName(string currentName)
+    {
+        SyncPlayerNameUpdate(this.currentName, currentName);
+    }
 
     // Start is called before the first frame update
     void Start()
@@ -27,38 +41,15 @@ public class TankNaming : NetworkBehaviour
             input_playerNameGO = GameObject.FindGameObjectWithTag("PlayerNameInputField");
             inputField_playerName = input_playerNameGO.GetComponent<InputField>();
             inputField_playerName.onValueChanged.AddListener(delegate { InputTextChanged(); });
+
+            SetCurrentName(startingName);
         }
 
     }
 
-    //private void OnChangeTankName(string oldName, string newName)
-    //{
-    //    currentName = newName;
-
-    //    if (newName.Equals("")) currentName = startingName;
-
-    //    // Set the slider's value appropriately
-    //    tmpro_tankName.text = currentName;
-    //}
-
     private void InputTextChanged()
     {
         if (!isLocalPlayer) return;
-        InputTextValueChanged(inputField_playerName.text);
-    }
-
-    private void InputTextValueChanged(string name)
-    {
-        Debug.Log(name);
-        //if (!isLocalPlayer)
-        //{
-        //    return;
-        //}
-        // Update current tank name value
-        //currentName = inputField_playerName.text;
-        //if (currentName.Equals("")) currentName = startingName;
-
-        //tmpro_tankName.text = currentName;
-        playerName.SetCurrentName(name);
+        SetCurrentName(inputField_playerName.text);
     }
 }
