@@ -28,7 +28,8 @@ public class TankNaming : NetworkBehaviour
         tmpro_tankName.text = currentName;
     }
 
-    public void SetCurrentName(string currentName)
+    [Command]
+    public void CmdSetCurrentName(string currentName)
     {
         SyncPlayerNameUpdate(this.currentName, currentName);
     }
@@ -42,7 +43,7 @@ public class TankNaming : NetworkBehaviour
             inputField_playerName = input_playerNameGO.GetComponent<InputField>();
             inputField_playerName.onValueChanged.AddListener(delegate { InputTextChanged(); });
 
-            SetCurrentName(startingName);
+            CmdSetCurrentName(startingName);
         }
 
     }
@@ -50,6 +51,6 @@ public class TankNaming : NetworkBehaviour
     private void InputTextChanged()
     {
         if (!isLocalPlayer) return;
-        SetCurrentName(inputField_playerName.text);
+        CmdSetCurrentName(inputField_playerName.text);
     }
 }
