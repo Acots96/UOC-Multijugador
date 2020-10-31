@@ -44,14 +44,12 @@ public class TankNaming : NetworkBehaviour
     private void InputTextChanged()
     {
         if (!isLocalPlayer) return;
-        Debug.Log("HELLO");
-        CmdInputTextValueChanged();
+        InputTextValueChanged(inputField_playerName.text);
     }
 
-    [Command]
-    private void CmdInputTextValueChanged()
+    private void InputTextValueChanged(string name)
     {
-        Debug.Log("HELLO_1234");
+        Debug.Log(name);
         //if (!isLocalPlayer)
         //{
         //    return;
@@ -61,6 +59,6 @@ public class TankNaming : NetworkBehaviour
         //if (currentName.Equals("")) currentName = startingName;
 
         //tmpro_tankName.text = currentName;
-        playerName.currentName = inputField_playerName.text;
+        playerName.SetCurrentName(name);
     }
 }
