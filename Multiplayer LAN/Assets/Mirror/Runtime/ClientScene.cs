@@ -706,7 +706,6 @@ namespace Mirror
                         {
                             if (identity.sceneId == 0)
                             {
-                                Debug.Log("DESTROY");
                                 Object.Destroy(identity.gameObject);
                             }
                             else
