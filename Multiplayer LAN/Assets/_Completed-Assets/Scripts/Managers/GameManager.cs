@@ -79,7 +79,6 @@ namespace Complete
             Instance.npcsTanks.Remove(enemy);
         }
         public static void AddTank(Transform tank) {
-            Debug.Log("ADDING " + tank);
             if (tank.tag.Equals("Enemy"))
                 AddEnemy(tank);
             else if (tank.tag.Equals("Player"))
@@ -87,7 +86,6 @@ namespace Complete
             Instance.SetCameraTargets();
         }
         public static void RemoveTank(Transform tank) {
-            Debug.Log("REMOVING " + tank);
             if (tank.tag.Equals("Enemy"))
                 RemoveEnemy(tank);
             else if (tank.tag.Equals("Player"))

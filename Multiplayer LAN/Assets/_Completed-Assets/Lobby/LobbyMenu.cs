@@ -2,6 +2,7 @@
 using Mirror;
 using System;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 public class LobbyMenu : NetworkManager
 {
@@ -11,9 +12,12 @@ public class LobbyMenu : NetworkManager
     [SerializeField] private GameObject playerSpawnerSystem = null;
     private PlayerSpawnerSystem playerSpawnerSystemInstance = null;
 
+    [SerializeField] private Image selectedColorImage;
+
     void Awake()
     {
         manager = FindObjectOfType<NetworkManager>();
+        AwakeColorsButtons();
     }
 
     public void RunServer()
@@ -104,6 +108,23 @@ public class LobbyMenu : NetworkManager
         GameObject playerPrefab = Instantiate(manager.playerPrefab, spawnPoint.position, spawnPoint.rotation);
         NetworkServer.AddPlayerForConnection(conn, playerPrefab);
         //Complete.GameManager.AddTank(playerPrefab.transform);
+    }
+
+    
+    public void AwakeColorsButtons() {
+        GameObject[] btns = GameObject.FindGameObjectsWithTag("PlayerColorButton");
+        for (int i = 0; i < btns.Length; i++) {
+            GameObject b = btns[i];
+            b.GetComponent<Button>().onClick.
+                AddListener(delegate { ColorChanged(b.GetComponent<Image>().color); });
+        }
+        ColorChanged(Color.red);
+    }
+
+    private void ColorChanged(Color c) {
+        string s = c.r + ";" + c.g + ";" + c.b;
+        PlayerPrefs.SetString("SelectedColor", s);
+        selectedColorImage.color = c;
     }
 
 }
