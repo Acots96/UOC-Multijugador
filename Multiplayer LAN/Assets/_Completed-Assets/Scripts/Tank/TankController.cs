@@ -6,7 +6,13 @@ using UnityEngine.UI;
 
 public class TankController : NetworkBehaviour {
 
-    // Start is called before the first frame update
+    /** metodos para indicar al GameManager que debe tener en cuenta 
+     * (o dejar de tener en cuenta) este tanque.
+     * 
+     * Esta por "duplicado" para asegurar que funciona, ya que en
+     * algunos casos daba problemas.
+     */
+
     private void Start() {
         Complete.GameManager.AddTank(transform);
     }
@@ -28,6 +34,10 @@ public class TankController : NetworkBehaviour {
         renderers = gameObject.GetComponentsInChildren<MeshRenderer>();
     }
 
+    /**
+     * Obtiene el color de cada boton y le pone el listener correspondiente
+     * para que llame al metodo que cambia el color.
+     */
     public override void OnStartLocalPlayer() {
         GameObject[] btns = GameObject.FindGameObjectsWithTag("PlayerColorButton");
         for (int i = 0; i < btns.Length; i++) {
@@ -44,6 +54,8 @@ public class TankController : NetworkBehaviour {
 
     private MeshRenderer[] renderers;
 
+    // para sincronizar la variable con los demas clientes desde el server
+    // hook=SyncPlayerColor para que llame al metodo cada vez que cambie la variable
     [SyncVar(hook = "SyncPlayerColor")]
     private Color color = Color.blue;
 
@@ -57,6 +69,8 @@ public class TankController : NetworkBehaviour {
         CmdColorChanged(c);
     }
 
+    // para que se ejecute en el server y por lo tanto pueda tenerse en cuenta
+    // en los demas clientes
     [Command]
     private void CmdColorChanged(Color c) {
         SyncPlayerColor(color, c);

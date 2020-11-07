@@ -66,6 +66,16 @@ namespace Complete
             }
         }
 
+
+        /**
+         * Metodos llamados desde TankController cuando entra o sale
+         * una nueva instancia de un tanque, para ponerlo en las dos listas
+         * que tiene en cuenta el CameraController para enfocar a todos 
+         * los tanques.
+         * Siempre se comprueba que el tanque ya exista (o no) en las
+         * listas antes de realizar operaciones, para evitar duplicados.
+         */
+
         private static void AddPlayer(Transform player) {
             if (!Instance.playersTanks.Contains(player))
                 Instance.playersTanks.Add(player);
@@ -98,19 +108,6 @@ namespace Complete
         }
         private static void SetEnemies(List<Transform> npcs) {
             Instance.npcsTanks = npcs;
-            Instance.SetCameraTargets();
-        }
-
-        public static void UpdatePlayersAndPlayers() {
-            List<Transform> players = new List<Transform>();
-            foreach (GameObject go in GameObject.FindGameObjectsWithTag("Player"))
-                players.Add(go.transform);
-            Instance.playersTanks.AddRange(players);
-            List<Transform> npcs = new List<Transform>();
-            foreach (GameObject go in GameObject.FindGameObjectsWithTag("Enemy"))
-                npcs.Add(go.transform);
-            Instance.npcsTanks.AddRange(npcs);
-            Debug.Log(Instance.playersTanks.Count + " , " + Instance.npcsTanks.Count);
             Instance.SetCameraTargets();
         }
 

@@ -110,7 +110,12 @@ public class LobbyMenu : NetworkManager
         //Complete.GameManager.AddTank(playerPrefab.transform);
     }
 
-    
+
+    /**
+     * Obtiene el color de cada boton y le pone el listener correspondiente
+     * para que llame al metodo que cambia el color.
+     * Tambien actualiza al primer color por defecto
+     */
     public void AwakeColorsButtons() {
         GameObject[] btns = GameObject.FindGameObjectsWithTag("PlayerColorButton");
         for (int i = 0; i < btns.Length; i++) {
@@ -121,6 +126,9 @@ public class LobbyMenu : NetworkManager
         ColorChanged(Color.red);
     }
 
+    /**
+     * Guarda en PlayerPrefs el color para pasarlo al tanque en la escena de juego.
+     */
     private void ColorChanged(Color c) {
         string s = c.r + ";" + c.g + ";" + c.b;
         PlayerPrefs.SetString("SelectedColor", s);

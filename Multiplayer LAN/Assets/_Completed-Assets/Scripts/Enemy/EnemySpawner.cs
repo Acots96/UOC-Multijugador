@@ -7,7 +7,11 @@ public class EnemySpawner : NetworkBehaviour {
     public GameObject enemyPrefab;
     public int numberOfEnemies;
 
-
+    /**
+     * Solo en el server, obtiene los puntos de spawn puestos para los
+     * npcs enemigos y luego instancia el prefab de Enemy, ademas de 
+     * indicar al server que esta creando ese objeto (NetworkServer.Spawn(prefab))
+     */
     public override void OnStartServer() {
         List<Transform> spawnPositions = new List<Transform>();
         foreach (Transform t in transform)
