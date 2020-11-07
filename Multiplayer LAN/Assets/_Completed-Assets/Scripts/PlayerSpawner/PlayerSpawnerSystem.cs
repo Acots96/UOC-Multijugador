@@ -28,6 +28,7 @@ public class PlayerSpawnerSystem : NetworkBehaviour
     [Server]
     public Transform GetSpawnPoint()
     {
+        if (nextIndex >= spawnPoints.Count) nextIndex = 0;
         Transform spawnPoint = spawnPoints[nextIndex];
         nextIndex++;
         return spawnPoint;
