@@ -67,16 +67,20 @@ namespace Complete
         }
 
         private static void AddPlayer(Transform player) {
-            Instance.playersTanks.Add(player);
+            if (!Instance.playersTanks.Contains(player))
+                Instance.playersTanks.Add(player);
         }
         private static void RemovePlayer(Transform player) {
-            Instance.playersTanks.Remove(player);
+            if (Instance.playersTanks.Contains(player))
+                Instance.playersTanks.Remove(player);
         }
         private static void AddEnemy(Transform enemy) {
-            Instance.npcsTanks.Add(enemy);
+            if (!Instance.npcsTanks.Contains(enemy))
+                Instance.npcsTanks.Add(enemy);
         }
         private static void RemoveEnemy(Transform enemy) {
-            Instance.npcsTanks.Remove(enemy);
+            if (Instance.npcsTanks.Contains(enemy))
+                Instance.npcsTanks.Remove(enemy);
         }
         public static void AddTank(Transform tank) {
             if (tank.tag.Equals("Enemy"))
