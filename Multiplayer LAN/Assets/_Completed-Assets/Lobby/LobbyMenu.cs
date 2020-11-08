@@ -3,6 +3,7 @@ using Mirror;
 using System;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using Mirror.Discovery;
 
 public class LobbyMenu : NetworkManager
 {
@@ -26,6 +27,7 @@ public class LobbyMenu : NetworkManager
         {
             if (!NetworkClient.active)
             {
+                networkDiscovery.AdvertiseServer();
                 manager.StartServer();
             }
         }
@@ -39,6 +41,7 @@ public class LobbyMenu : NetworkManager
         {
             if (!NetworkClient.active)
             {
+                networkDiscovery.AdvertiseServer();
                 manager.StartHost();
             }
         }
@@ -133,6 +136,20 @@ public class LobbyMenu : NetworkManager
         string s = c.r + ";" + c.g + ";" + c.b;
         PlayerPrefs.SetString("SelectedColor", s);
         selectedColorImage.color = c;
+    }
+
+
+
+    [SerializeField] private NetworkDiscovery networkDiscovery;
+
+    public void FindServers() {
+        networkDiscovery.StartDiscovery();
+    }
+
+    public void OnDiscoveredServer(ServerResponse info) {
+        // Note that you can check the versioning to decide if you can connect to the server or not using this method
+        Debug.Log("DISCOVERED SERVER: "+info.ToString());
+        JoinGame();
     }
 
 }
