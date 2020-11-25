@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using PlayFab;
 using PlayFab.ClientModels;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class PlayfabController : MonoBehaviour
 {
@@ -11,6 +12,7 @@ public class PlayfabController : MonoBehaviour
     public string userEmail;
     public string userPassword;
     public string userName;
+    public string userDisplayName;
 
     public static PlayfabController _instance;
 
@@ -41,6 +43,8 @@ public class PlayfabController : MonoBehaviour
             userEmail = PlayerPrefs.GetString("EMAIL");
             userPassword = PlayerPrefs.GetString("PASSWORD");
             userName = PlayerPrefs.GetString("USERNAME");
+            
+            OnClickLogin();
         }
     }
 
@@ -48,7 +52,16 @@ public class PlayfabController : MonoBehaviour
     {
         Debug.Log(result);
         SavePlayerPrefs();
-        // TODO transition to next scene
+
+        var request = new GetPlayerProfileRequest();
+        PlayFabClientAPI.GetPlayerProfile(request, OnGetPlayerProfileSuccess, OnGetPlayerProfileFailure);
+        
+        GoToLobby();
+    }
+
+    private static void GoToLobby()
+    {
+        SceneManager.LoadScene("Lobby");
     }
 
     private void OnLoginFailure(PlayFabError error)
@@ -71,6 +84,33 @@ public class PlayfabController : MonoBehaviour
         Debug.LogError(error.GenerateErrorReport());
         // TODO show message about registering new user
     }
+
+    private void OnGetPlayerProfileSuccess(GetPlayerProfileResult result)
+    {
+        if (result.PlayerProfile.DisplayName == null)
+        {
+            var request = new UpdateUserTitleDisplayNameRequest() { DisplayName = userName };
+            PlayFabClientAPI.UpdateUserTitleDisplayName(request, OnUpdateUserTitleDisplayNameSuccess, OnUpdateUserTitleDisplayNameFailure);
+        }
+        
+        userDisplayName = result.PlayerProfile.DisplayName;
+        Debug.Log(userDisplayName);
+    }
+
+    private void OnGetPlayerProfileFailure(PlayFabError error)
+    {
+        Debug.LogError(error.GenerateErrorReport());
+    }
+
+    private void OnUpdateUserTitleDisplayNameSuccess(UpdateUserTitleDisplayNameResult result)
+    {
+        Debug.Log(result.DisplayName);
+    }
+
+    private void OnUpdateUserTitleDisplayNameFailure(PlayFabError error)
+    {
+        Debug.LogError(error.GenerateErrorReport());
+    }
     
     private void SavePlayerPrefs()
     {
@@ -82,7 +122,6 @@ public class PlayfabController : MonoBehaviour
     
     public void GetUserEmail(string userEmail)
     {
-        Debug.Log("IS THIS CALLED? " + userEmail);
         this.userEmail = userEmail;
     }
 
@@ -101,5 +140,11 @@ public class PlayfabController : MonoBehaviour
         var request = new LoginWithEmailAddressRequest() { Email = userEmail, Password = userPassword};
         PlayFabClientAPI.LoginWithEmailAddress(request, OnLoginSuccess, OnLoginFailure);
     }
-    
+
+    public void PerformLogout()
+    {
+        PlayFabClientAPI.ForgetAllCredentials();
+        PlayerPrefs.DeleteAll();
+        SceneManager.LoadScene("Login");
+    }
 }
