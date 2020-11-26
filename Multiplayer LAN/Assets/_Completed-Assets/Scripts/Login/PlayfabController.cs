@@ -55,13 +55,6 @@ public class PlayfabController : MonoBehaviour
 
         var request = new GetPlayerProfileRequest();
         PlayFabClientAPI.GetPlayerProfile(request, OnGetPlayerProfileSuccess, OnGetPlayerProfileFailure);
-        
-        GoToLobby();
-    }
-
-    private static void GoToLobby()
-    {
-        SceneManager.LoadScene("Lobby");
     }
 
     private void OnLoginFailure(PlayFabError error)
@@ -89,12 +82,18 @@ public class PlayfabController : MonoBehaviour
     {
         if (result.PlayerProfile.DisplayName == null)
         {
-            var request = new UpdateUserTitleDisplayNameRequest() { DisplayName = userName };
-            PlayFabClientAPI.UpdateUserTitleDisplayName(request, OnUpdateUserTitleDisplayNameSuccess, OnUpdateUserTitleDisplayNameFailure);
+            PerformUpdateDisplayName(userName);
         }
         
         userDisplayName = result.PlayerProfile.DisplayName;
-        Debug.Log(userDisplayName);
+
+        GoToLobby();
+    }
+   
+    private void PerformUpdateDisplayName(string displayName)
+    {
+        var request = new UpdateUserTitleDisplayNameRequest() {DisplayName = displayName};
+        PlayFabClientAPI.UpdateUserTitleDisplayName(request, OnUpdateUserTitleDisplayNameSuccess, OnUpdateUserTitleDisplayNameFailure);
     }
 
     private void OnGetPlayerProfileFailure(PlayFabError error)
@@ -104,12 +103,17 @@ public class PlayfabController : MonoBehaviour
 
     private void OnUpdateUserTitleDisplayNameSuccess(UpdateUserTitleDisplayNameResult result)
     {
-        Debug.Log(result.DisplayName);
+        Debug.Log("displayName updated " + result.DisplayName);
     }
 
     private void OnUpdateUserTitleDisplayNameFailure(PlayFabError error)
     {
         Debug.LogError(error.GenerateErrorReport());
+    }
+     
+    private static void GoToLobby()
+    {
+        SceneManager.LoadScene("Lobby");
     }
     
     private void SavePlayerPrefs()
@@ -146,5 +150,10 @@ public class PlayfabController : MonoBehaviour
         PlayFabClientAPI.ForgetAllCredentials();
         PlayerPrefs.DeleteAll();
         SceneManager.LoadScene("Login");
+    }
+
+    public void UpdateDisplayName(string displayName)
+    {
+        PerformUpdateDisplayName(displayName);
     }
 }

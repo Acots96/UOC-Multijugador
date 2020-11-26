@@ -13,7 +13,11 @@ public class DisplayNameManager : MonoBehaviour
     private void Start()
     {
         playfabController = PlayfabController._instance;
-
         displayName_InputField.text = playfabController.userDisplayName;
+    }
+
+    public void OnUpdateDisplayNameClick()
+    {
+        playfabController.UpdateDisplayName(displayName_InputField.text);
     }
 }
