@@ -63,7 +63,6 @@ public class TurretEnemy : NetworkBehaviour {
             }
         }
         targetTr = targ;
-        Debug.Log(targetTr);
         //
         //Fire();
     }
