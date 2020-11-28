@@ -25,7 +25,7 @@ namespace Complete
 
 
         private static GameManager Instance;
-        private List<Transform> npcsTanks, playersTanks;
+        public List<Transform> npcsTanks, playersTanks;
 
 
         private void Awake() {
@@ -111,6 +111,13 @@ namespace Complete
             Instance.SetCameraTargets();
         }
 
+        public static List<Transform> GetNpcsTanks() {
+            return Instance.npcsTanks;
+        }
+        public static List<Transform> GetPlayersTanks() {
+            return Instance.playersTanks;
+        }
+
 
         private void SetCameraTargets()
         {
@@ -130,6 +137,7 @@ namespace Complete
             }
 
             for (int i = 0; i < npcsTanks.Count; i++) {
+                //Debug.Log(npcsTanks[i]);
                 targets.Add(npcsTanks[i]);
             }
 
