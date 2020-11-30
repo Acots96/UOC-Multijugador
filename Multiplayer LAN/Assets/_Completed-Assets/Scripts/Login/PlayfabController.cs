@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using PlayFab;
 using PlayFab.ClientModels;
+using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -16,6 +17,8 @@ public class PlayfabController : MonoBehaviour
 
     public static PlayfabController _instance;
 
+    public MessageManager messageManager;
+    
     private void OnEnable()
     {
         if (_instance == null)
@@ -59,23 +62,43 @@ public class PlayfabController : MonoBehaviour
 
     private void OnLoginFailure(PlayFabError error)
     {
-        Debug.Log("User: " + userEmail + " does not exist. Registering new player...");
-        // TODO show message about registering new user
-        var registerRequest = new RegisterPlayFabUserRequest{ Email = userEmail, Password = userPassword, Username = userName };
-        PlayFabClientAPI.RegisterPlayFabUser(registerRequest, OnRegisterSuccess, OnRegisterFailure);
+        // '' invalid password or email format -> Error: InvalidParams
+        // 'User not found' if email not registered -> Error: AccountNotFound
+        // 'Invalid email address or password' -> Error: InvalidEmailOrPassword
+
+        string message = "";
+        
+        switch (error.Error)
+        {
+            case PlayFabErrorCode.InvalidParams:
+                message = error.GenerateErrorReport();
+                messageManager.ShowMessage(true, message);
+                break;
+            case PlayFabErrorCode.AccountNotFound:
+                message = error.GenerateErrorReport() + "\nUser: " + userEmail + " does not exist. Registering new player...";
+                messageManager.ShowMessage(true, message);
+                
+                var registerRequest = new RegisterPlayFabUserRequest{ Email = userEmail, Password = userPassword, Username = userName };
+                PlayFabClientAPI.RegisterPlayFabUser(registerRequest, OnRegisterSuccess, OnRegisterFailure);
+                break;
+            case PlayFabErrorCode.InvalidEmailOrPassword:
+                message = error.GenerateErrorReport();
+                messageManager.ShowMessage(true, message);
+                break;
+        }
     }
 
     private void OnRegisterSuccess(RegisterPlayFabUserResult result)
     {
-        Debug.Log("Congratulations, new user has been registered");
-        //TODO show message of success and maybe give options
+        string message = "Congratulations, new user has been registered";
+        messageManager.ShowMessage(true, message);
         SavePlayerPrefs();
     }
     
     private void OnRegisterFailure(PlayFabError error)
     {
-        Debug.LogError(error.GenerateErrorReport());
-        // TODO show message about registering new user
+        string message = error.GenerateErrorReport();
+        messageManager.ShowMessage(true, message);
     }
 
     private void OnGetPlayerProfileSuccess(GetPlayerProfileResult result)
@@ -98,7 +121,8 @@ public class PlayfabController : MonoBehaviour
 
     private void OnGetPlayerProfileFailure(PlayFabError error)
     {
-        Debug.LogError(error.GenerateErrorReport());
+        string message = error.GenerateErrorReport();
+        messageManager.ShowMessage(true, message);
     }
 
     private void OnUpdateUserTitleDisplayNameSuccess(UpdateUserTitleDisplayNameResult result)
@@ -108,7 +132,8 @@ public class PlayfabController : MonoBehaviour
 
     private void OnUpdateUserTitleDisplayNameFailure(PlayFabError error)
     {
-        Debug.LogError(error.GenerateErrorReport());
+        string message = error.GenerateErrorReport();
+        messageManager.ShowMessage(true, message);
     }
      
     private static void GoToLobby()
@@ -149,6 +174,11 @@ public class PlayfabController : MonoBehaviour
     {
         PlayFabClientAPI.ForgetAllCredentials();
         PlayerPrefs.DeleteAll();
+
+        userName = string.Empty;
+        userEmail = string.Empty;
+        userPassword = string.Empty;
+        
         SceneManager.LoadScene("Login");
     }
 
