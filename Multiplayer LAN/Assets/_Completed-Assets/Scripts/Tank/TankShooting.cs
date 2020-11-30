@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Controls; // Control
 using UnityEngine.UI;
 using Mirror;
 
@@ -10,6 +11,7 @@ namespace Complete
     {
         public int m_PlayerNumber = 1;              // Used to identify the different players
         public Rigidbody m_Shell;                   // Prefab of the shell
+        public Rigidbody m_AltShell;                // Nuevo proyectil
         public Transform m_FireTransform;           // A child of the tank where the shells are spawned
         public Slider m_AimSlider;                  // A child of the tank that displays the current launch force
         public AudioSource m_ShootingAudio;         // Reference to the audio source used to play the shooting audio. NB: different to the movement audio source
@@ -18,12 +20,23 @@ namespace Complete
         public float m_MinLaunchForce = 15f;        // The force given to the shell if the fire button is not held
         public float m_MaxLaunchForce = 30f;        // The force given to the shell if the fire button is held for the max charge time
         public float m_MaxChargeTime = 0.75f;       // How long the shell can charge for before it is fired at max force
-
-        private float m_CurrentLaunchForce;         // The force that will be given to the shell when the fire button is released
+        private float m_ChargeSpeed;                // How fast the launch force increases, based on the max charge time.
+        private bool m_Fired;                       // Whether or not the shell has been launched with this button press.
+        [SyncVar]
+        public float m_CurrentLaunchForce;         // The force that will be given to the shell when the fire button is released
         private InputAction m_FireAction;           // Fire Action reference (Unity 2020 New Input System)
         private bool isDisabled = false;            // To avoid enabling / disabling Input System when tank is destroyed
 
+        private ButtonControl fireControl;
+        private ButtonControl fastFireControl;
+        private ButtonControl bombFireControl;
+
         public GameObject m_ShellGO;
+        public GameObject m_AltShellGO;
+        public GameObject m_BombGO;
+
+        [SyncVar]
+        public float velTest=0;
 
         private void OnEnable()
         {
@@ -43,57 +56,181 @@ namespace Complete
         {
             // Unity 2020 New Input System
             // Get a reference to the EventSystem for this player
-            EventSystem ev = GameObject.Find ("EventSystem").GetComponent<EventSystem>();
+            EventSystem ev = GameObject.Find("EventSystem").GetComponent<EventSystem>();
 
             // Find the Action Map for the Tank actions and enable it
-            InputActionMap playerActionMap = ev.GetComponent<PlayerInput>().actions.FindActionMap ("Tank");
+            InputActionMap playerActionMap = ev.GetComponent<PlayerInput>().actions.FindActionMap("Tank");
             playerActionMap.Enable();
 
             // Find the 'Fire' action
-            m_FireAction = playerActionMap.FindAction ("Fire");
-
+            m_FireAction = playerActionMap.FindAction("Fire");
             m_FireAction.Enable();
-            m_FireAction.performed += OnFire;
+
+            //m_FireAction.performed += OnFire;
+            fireControl = (ButtonControl)m_FireAction.controls[0];
+            fastFireControl = (ButtonControl)m_FireAction.controls[1];
+            bombFireControl = (ButtonControl)m_FireAction.controls[2];
+
+            m_ChargeSpeed = (m_MaxLaunchForce - m_MinLaunchForce) / m_MaxChargeTime;
+        }
+
+
+        private void Update()
+        {
+            if (!isLocalPlayer) return;
+            // The slider should have a default value of the minimum launch force.
+            m_AimSlider.value = m_MinLaunchForce;
+
+            // If the max force has been exceeded and the shell hasn't yet been launched...
+            if (m_CurrentLaunchForce >= m_MaxLaunchForce && !m_Fired)
+            {
+                // ... use the max force and launch the shell.
+                m_CurrentLaunchForce = m_MaxLaunchForce;
+                Fire(GetTypeOfShoot());
+            }
+            // Otherwise, if the fire button has just started being pressed...
+            else if (GetKeyStateButtonDown())
+            {
+                // ... reset the fired flag and reset the launch force.
+                m_Fired = false;
+                m_CurrentLaunchForce = m_MinLaunchForce;
+
+                // Change the clip to the charging clip and start it playing.
+                m_ShootingAudio.clip = m_ChargingClip;
+                m_ShootingAudio.Play();
+            }
+            // Otherwise, if the fire button is being held and the shell hasn't been launched yet...
+            else if (GetKeyStateButton() && !m_Fired)
+            {
+                // Increment the launch force and update the slider.
+                m_CurrentLaunchForce += m_ChargeSpeed * Time.deltaTime;
+
+                m_AimSlider.value = m_CurrentLaunchForce;
+            }
+            // Otherwise, if the fire button is released and the shell hasn't been launched yet...
+            else if (GetKeyStateButtonUp() && !m_Fired)
+            {
+                // ... launch the shell.
+                Fire(GetTypeOfShoot());
+            }
+        }
+        
+        //Método para establecer el tipo de arma a utilizar
+        private int GetTypeOfShoot()
+        {
+             if (fireControl.wasPressedThisFrame || fireControl.isPressed || fireControl.wasReleasedThisFrame)
+            {
+                return 0;
+            }
+            else if (fastFireControl.wasPressedThisFrame || fastFireControl.isPressed || fastFireControl.wasReleasedThisFrame)
+            {
+                return 1;
+            }
+            else if (bombFireControl.wasPressedThisFrame || bombFireControl.isPressed || bombFireControl.wasReleasedThisFrame)
+            {
+                return 2;
+            }
+            return 0;
+        }
+
+        private bool GetKeyStateButtonDown()
+        {
+
+            //En caso de presionar alguno de los botones de disparo
+            return fireControl.wasPressedThisFrame || fastFireControl.wasPressedThisFrame || bombFireControl.wasPressedThisFrame;
+
+        }
+
+        private bool GetKeyStateButton()
+        {
+
+            //En caso de dejar sostenido alguno de los botones de disparo
+            return fireControl.isPressed || fastFireControl.isPressed || bombFireControl.isPressed;
+
+        }
+
+        private bool GetKeyStateButtonUp()
+        {
+
+            //En caso de soltar alguno de los botones de disparo
+            return fireControl.wasReleasedThisFrame || fastFireControl.wasReleasedThisFrame || bombFireControl.wasReleasedThisFrame;
+
         }
 
         [Client]
-        // Event called when this player's 'Fire' action is triggered by the New Input System
-        public void OnFire(InputAction.CallbackContext obj)
+        private void Fire(int shootType)
         {
+            //Debug.Log("Client Call");
             if (!isLocalPlayer) return;
 
             if (!isDisabled)
             {
-                // When the value read is higher than the default Button Press Point, the key has been pressed
-                if (obj.ReadValue<float>() >= InputSystem.settings.defaultButtonPressPoint)
-                {
-                    CmdFire();
-                }
+                Debug.Log("Client Call NO DISABLED");
+                // Set the fired flag so only Fire is only called once.
+                m_Fired = true;
+                CmdFire(shootType);
+
             }
         }
 
-        //[Client]
         [Command]
-        private void CmdFire()
+        private void CmdFire(int shootType)
         {
+            Debug.Log("Command Call");
+
             // Create an instance of the shell and store a reference to it's rigidbody
-            Rigidbody shellInstance;
+            Rigidbody shellInstance = new Rigidbody();
+            GameObject shell =  new GameObject();
+            //ShellExplosion shellExplosion;
+            float velFactor = 1.0f; //Velocidad del arma
 
-            GameObject shell = Instantiate(m_ShellGO, m_FireTransform.position, m_FireTransform.rotation);
-            shellInstance = shell.GetComponent<Rigidbody>();
-            NetworkServer.Spawn(shell);
+            switch (shootType)
+            {
+                case 0:
+                    //spawn para el proyectil normal
+                    shell = Instantiate(m_ShellGO, m_FireTransform.position, m_FireTransform.rotation);
+                    velFactor = 1.0f;
+                    break;
+                //CmdFire(m_AltShellGO, altShoot);
+                case 1:
 
-            //shellInstance = Instantiate(m_Shell, m_FireTransform.position, m_FireTransform.rotation) as Rigidbody;
+                    //spawn para el proyectil rápido
+                    shell = Instantiate(m_AltShellGO, m_FireTransform.position, m_FireTransform.rotation);
+                    velFactor = 1.5f;
+                    break;
+                case 2:
 
-            // Set the shell's velocity to the launch force in the fire position's forward direction
-            shellInstance.velocity = m_CurrentLaunchForce * m_FireTransform.forward;
+                    //spawn para la bomba
+                    shell = Instantiate(m_BombGO, m_FireTransform.position, m_FireTransform.rotation);
+                    velFactor = 0.5f;
+                    break;
+            }
 
-            // Change the clip to the firing clip and play it
-            m_ShootingAudio.clip = m_FireClip;
-            m_ShootingAudio.Play();
+            velTest = velFactor;
 
-            // Reset the launch force.  This is a precaution in case of missing button events
-            m_CurrentLaunchForce = m_MinLaunchForce;
+            //Condicional para asegurarnos que el rigid body tenga información
+            if (shell.GetComponent<Rigidbody>() != null)
+            {
+                shellInstance = shell.GetComponent<Rigidbody>();
+                //shellExplosion = shell.GetComponent<ShellExplosion>();
+                //Instancia del proyectil en el servidor
+                NetworkServer.Spawn(shell);
+                //shellExplosion.ShellVelocity = velFactor * m_CurrentLaunchForce;
+                //shellInstance
+                // Set the shell's velocity to the launch force in the fire position's forward direction
+                shellInstance.velocity = m_CurrentLaunchForce * m_FireTransform.forward;
+
+                //Toma la velocidad de la variable de acuerdo al arma establecida
+                shellInstance.velocity *= velFactor;
+
+
+                // Change the clip to the firing clip and play it
+                m_ShootingAudio.clip = m_FireClip;
+                m_ShootingAudio.Play();
+
+                // Reset the launch force.  This is a precaution in case of missing button events
+                m_CurrentLaunchForce = m_MinLaunchForce;
+            }
         }
     }
 }

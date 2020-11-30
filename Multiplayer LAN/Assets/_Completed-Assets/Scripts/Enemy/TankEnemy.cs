@@ -41,6 +41,8 @@ public class TankEnemy : NetworkBehaviour {
         findTargetRateDeltaTime -= Time.deltaTime;
         //
         RotateSmoothly();
+        if (!targetTr)
+            return;
         if (Vector3.Distance(targetTr.position, tr.position) > MinDistanceToStop)
             tr.position += tr.forward * Speed * Time.deltaTime;
     }
