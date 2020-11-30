@@ -14,8 +14,6 @@ namespace Complete
         public float m_MaxLifeTime = 2f;                    // The time in seconds before the shell is removed
         public float m_ExplosionRadius = 5f;                // The maximum distance away from the explosion tanks can be and are still affected
 
-        public float ShellVelocity = 1.0f;
-
         public float TimeForDetonate = 5f;                  //Tiempo para detonar la bomba
         public bool IsBomb = false;                         //Indica si es o no una bomba
 
@@ -25,7 +23,10 @@ namespace Complete
             //GetComponent<Rigidbody>().velocity = transform.forward * ShellVelocity;
             // If it isn't destroyed by then, destroy the shell after it's lifetime
             if (!IsBomb)
+            {
+                
                 Destroy(gameObject, m_MaxLifeTime);
+            }
             else
                 Invoke("Explosion", TimeForDetonate);
         }
@@ -77,21 +78,6 @@ namespace Complete
                 RpcDestroyShell();
             }
 
-            /*// Unparent the particles from the shell
-            m_ExplosionParticles.transform.parent = null;
-
-            // Play the particle system
-            m_ExplosionParticles.Play();
-
-            // Play the explosion sound effect
-            m_ExplosionAudio.Play();
-
-            // Once the particles have finished, destroy the gameobject they are on
-            ParticleSystem.MainModule mainModule = m_ExplosionParticles.main;
-            Destroy(m_ExplosionParticles.gameObject, mainModule.duration);
-
-            // Destroy the shell
-            Destroy(gameObject);*/
         }
 
 
@@ -123,7 +109,7 @@ namespace Complete
 
             // Play the particle system
             m_ExplosionParticles.Play();
-            Debug.Log("Partícula funciona");
+            //Debug.Log("Partícula funciona");
 
             // Play the explosion sound effect
             m_ExplosionAudio.Play();

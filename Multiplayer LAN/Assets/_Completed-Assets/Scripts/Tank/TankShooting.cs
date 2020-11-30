@@ -35,8 +35,8 @@ namespace Complete
         public GameObject m_AltShellGO;
         public GameObject m_BombGO;
 
-        [SyncVar]
-        public float velTest=0;
+/*        [SyncVar]
+        public float VelTest = 0f;*/
 
         private void OnEnable()
         {
@@ -87,6 +87,7 @@ namespace Complete
                 // ... use the max force and launch the shell.
                 m_CurrentLaunchForce = m_MaxLaunchForce;
                 Fire(GetTypeOfShoot());
+                //CmdFire(GetTypeOfShoot(), m_CurrentLaunchForce);
             }
             // Otherwise, if the fire button has just started being pressed...
             else if (GetKeyStateButtonDown())
@@ -112,6 +113,7 @@ namespace Complete
             {
                 // ... launch the shell.
                 Fire(GetTypeOfShoot());
+                //CmdFire(GetTypeOfShoot(), m_CurrentLaunchForce);
             }
         }
         
@@ -168,21 +170,20 @@ namespace Complete
                 Debug.Log("Client Call NO DISABLED");
                 // Set the fired flag so only Fire is only called once.
                 m_Fired = true;
-                CmdFire(shootType);
+                CmdFire(shootType, m_CurrentLaunchForce);
 
             }
         }
 
         [Command]
-        private void CmdFire(int shootType)
+        private void CmdFire(int shootType, float currentLaunchForce)
         {
-            Debug.Log("Command Call");
-
+            //Debug.Log("Command Call");
             // Create an instance of the shell and store a reference to it's rigidbody
             Rigidbody shellInstance = new Rigidbody();
             GameObject shell =  new GameObject();
             //ShellExplosion shellExplosion;
-            float velFactor = 1.0f; //Velocidad del arma
+            float velFactor = 0.0f; //Velocidad del arma
 
             switch (shootType)
             {
@@ -206,7 +207,7 @@ namespace Complete
                     break;
             }
 
-            velTest = velFactor;
+            //VelTest = velFactor;
 
             //Condicional para asegurarnos que el rigid body tenga información
             if (shell.GetComponent<Rigidbody>() != null)
@@ -218,10 +219,14 @@ namespace Complete
                 //shellExplosion.ShellVelocity = velFactor * m_CurrentLaunchForce;
                 //shellInstance
                 // Set the shell's velocity to the launch force in the fire position's forward direction
-                shellInstance.velocity = m_CurrentLaunchForce * m_FireTransform.forward;
+              
+                //shellInstance.velocity = currentLaunchForce * m_FireTransform.forward * VelTest;
+
+                shellInstance.velocity = currentLaunchForce * m_FireTransform.forward * velFactor;
+                VelocityCorrection(shell, shellInstance.velocity);
 
                 //Toma la velocidad de la variable de acuerdo al arma establecida
-                shellInstance.velocity *= velFactor;
+                //shellInstance.velocity *= VelTest;
 
 
                 // Change the clip to the firing clip and play it
@@ -232,5 +237,11 @@ namespace Complete
                 m_CurrentLaunchForce = m_MinLaunchForce;
             }
         }
+
+        [ClientRpc] 
+        private void VelocityCorrection(GameObject go, Vector3 vel)
+        {
+                go.GetComponent<Rigidbody>().velocity = vel;
+        }
     }
-}
+} 
