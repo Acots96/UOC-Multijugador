@@ -4,11 +4,12 @@ using System;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using Mirror.Discovery;
+using TMPro;
 
 public class LobbyMenu : NetworkManager
 {
     private NetworkManager manager;
-    public string serverIP = "localhost";
+    //public string serverIP = "localhost";
 
     [SerializeField] private GameObject playerSpawnerSystem = null;
     private PlayerSpawnerSystem playerSpawnerSystemInstance = null;
@@ -27,7 +28,6 @@ public class LobbyMenu : NetworkManager
         {
             if (!NetworkClient.active)
             {
-                networkDiscovery.AdvertiseServer();
                 manager.StartServer();
             }
         }
@@ -41,7 +41,6 @@ public class LobbyMenu : NetworkManager
         {
             if (!NetworkClient.active)
             {
-                networkDiscovery.AdvertiseServer();
                 manager.StartHost();
             }
         }
@@ -55,7 +54,12 @@ public class LobbyMenu : NetworkManager
         {
             if (!NetworkClient.active)
             {
-                manager.networkAddress = serverIP;
+                //manager.networkAddress = serverIP;
+                if (!CheckValidIP()) {
+                    InvalidIpText.text = "Invalid IP. Must be like XXX.XXX.XXX.XXX (0 <= XXX <= 255)";
+                    return;
+                }
+                manager.networkAddress = IpField.text;
                 manager.StartClient();
             }
         }
@@ -140,16 +144,26 @@ public class LobbyMenu : NetworkManager
 
 
 
-    [SerializeField] private NetworkDiscovery networkDiscovery;
+    [SerializeField] private TMP_InputField IpField;
+    [SerializeField] private TextMeshProUGUI InvalidIpText;
 
-    public void FindServers() {
-        networkDiscovery.StartDiscovery();
-    }
+    private bool CheckValidIP() {
+        string ip = IpField.text;
+        if (ip.Length < 7 || ip.Length > 15 || !ip.Contains("."))
+            return false;
 
-    public void OnDiscoveredServer(ServerResponse info) {
-        // Note that you can check the versioning to decide if you can connect to the server or not using this method
-        Debug.Log("DISCOVERED SERVER: "+info.ToString());
-        JoinGame();
+        string[] ipNums = ip.Split('.');
+        if (ipNums.Length != 4)
+            return false;
+
+        int[] nums = new int[4];
+        for (int i = 0; i < ipNums.Length; i++) {
+            try { nums[i] = int.Parse(ipNums[i]); }
+            catch (Exception e) { return false; }
+            if (nums[i] < 0 || nums[i] > 255)
+                return false;
+        }
+        return true;
     }
 
 }
