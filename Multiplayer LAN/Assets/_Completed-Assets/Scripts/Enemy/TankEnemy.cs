@@ -41,6 +41,8 @@ public class TankEnemy : NetworkBehaviour {
         findTargetRateDeltaTime -= Time.deltaTime;
         //
         RotateSmoothly();
+        if (!targetTr)
+            return;
         if (Vector3.Distance(targetTr.position, tr.position) > MinDistanceToStop)
             tr.position += tr.forward * Speed * Time.deltaTime;
     }
@@ -95,10 +97,15 @@ public class TankEnemy : NetworkBehaviour {
         shell.transform.forward = vel;
         shell.GetComponent<Rigidbody>().velocity = vel;
         //
+        RpcFire(shell, vel);
         FireSound.Play();
     }
 
-    
+    [ClientRpc]
+    private void RpcFire(GameObject go, Vector3 vel)
+    {
+        go.GetComponent<Rigidbody>().velocity = vel;
+    }
 
     private void OnEnable() {
         GameManager.AddTank(transform);
