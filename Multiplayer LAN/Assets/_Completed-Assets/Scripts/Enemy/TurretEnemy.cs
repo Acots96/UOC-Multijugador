@@ -93,7 +93,15 @@ public class TurretEnemy : NetworkBehaviour {
         shell.transform.forward = vel;
         shell.GetComponent<Rigidbody>().velocity = vel;
         //
+        RpcFire(shell, vel);
+
         FireSound.Play();
+    }
+
+    [ClientRpc]
+    private void RpcFire(GameObject go, Vector3 vel)
+    {
+        go.GetComponent<Rigidbody>().velocity = vel;
     }
 
 }

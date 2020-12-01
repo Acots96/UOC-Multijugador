@@ -10,8 +10,6 @@ namespace Complete
     public class TankShooting : NetworkBehaviour
     {
         public int m_PlayerNumber = 1;              // Used to identify the different players
-        public Rigidbody m_Shell;                   // Prefab of the shell
-        public Rigidbody m_AltShell;                // Nuevo proyectil
         public Transform m_FireTransform;           // A child of the tank where the shells are spawned
         public Slider m_AimSlider;                  // A child of the tank that displays the current launch force
         public AudioSource m_ShootingAudio;         // Reference to the audio source used to play the shooting audio. NB: different to the movement audio source
@@ -22,7 +20,6 @@ namespace Complete
         public float m_MaxChargeTime = 0.75f;       // How long the shell can charge for before it is fired at max force
         private float m_ChargeSpeed;                // How fast the launch force increases, based on the max charge time.
         private bool m_Fired;                       // Whether or not the shell has been launched with this button press.
-        [SyncVar]
         public float m_CurrentLaunchForce;         // The force that will be given to the shell when the fire button is released
         private InputAction m_FireAction;           // Fire Action reference (Unity 2020 New Input System)
         private bool isDisabled = false;            // To avoid enabling / disabling Input System when tank is destroyed
@@ -34,9 +31,6 @@ namespace Complete
         public GameObject m_ShellGO;
         public GameObject m_AltShellGO;
         public GameObject m_BombGO;
-
-/*        [SyncVar]
-        public float VelTest = 0f;*/
 
         private void OnEnable()
         {
@@ -67,9 +61,9 @@ namespace Complete
             m_FireAction.Enable();
 
             //m_FireAction.performed += OnFire;
-            fireControl = (ButtonControl)m_FireAction.controls[0];
-            fastFireControl = (ButtonControl)m_FireAction.controls[1];
-            bombFireControl = (ButtonControl)m_FireAction.controls[2];
+            fireControl = (ButtonControl)m_FireAction.controls[0];          //Control [Barra espaciadora] para proyectil normal
+            fastFireControl = (ButtonControl)m_FireAction.controls[1];      //Control [Alt Izquierdo] para dispara proyectil acelerado
+            bombFireControl = (ButtonControl)m_FireAction.controls[2];      //Control [Ctrl Izquierda] para disparar proyectil bomba
 
             m_ChargeSpeed = (m_MaxLaunchForce - m_MinLaunchForce) / m_MaxChargeTime;
         }
@@ -87,7 +81,6 @@ namespace Complete
                 // ... use the max force and launch the shell.
                 m_CurrentLaunchForce = m_MaxLaunchForce;
                 Fire(GetTypeOfShoot());
-                //CmdFire(GetTypeOfShoot(), m_CurrentLaunchForce);
             }
             // Otherwise, if the fire button has just started being pressed...
             else if (GetKeyStateButtonDown())
@@ -113,7 +106,6 @@ namespace Complete
             {
                 // ... launch the shell.
                 Fire(GetTypeOfShoot());
-                //CmdFire(GetTypeOfShoot(), m_CurrentLaunchForce);
             }
         }
         
@@ -167,10 +159,9 @@ namespace Complete
 
             if (!isDisabled)
             {
-                Debug.Log("Client Call NO DISABLED");
                 // Set the fired flag so only Fire is only called once.
                 m_Fired = true;
-                CmdFire(shootType, m_CurrentLaunchForce);
+                CmdFire(shootType, m_CurrentLaunchForce); // Método para la creación del proyectil en el servidor
 
             }
         }
@@ -179,10 +170,8 @@ namespace Complete
         private void CmdFire(int shootType, float currentLaunchForce)
         {
             //Debug.Log("Command Call");
-            // Create an instance of the shell and store a reference to it's rigidbody
-            Rigidbody shellInstance = new Rigidbody();
             GameObject shell =  new GameObject();
-            //ShellExplosion shellExplosion;
+
             float velFactor = 0.0f; //Velocidad del arma
 
             switch (shootType)
@@ -192,7 +181,6 @@ namespace Complete
                     shell = Instantiate(m_ShellGO, m_FireTransform.position, m_FireTransform.rotation);
                     velFactor = 1.0f;
                     break;
-                //CmdFire(m_AltShellGO, altShoot);
                 case 1:
 
                     //spawn para el proyectil rápido
@@ -207,27 +195,18 @@ namespace Complete
                     break;
             }
 
-            //VelTest = velFactor;
-
             //Condicional para asegurarnos que el rigid body tenga información
             if (shell.GetComponent<Rigidbody>() != null)
             {
-                shellInstance = shell.GetComponent<Rigidbody>();
-                //shellExplosion = shell.GetComponent<ShellExplosion>();
+                // Create an instance of the shell and store a reference to it's rigidbody
+                Rigidbody shellInstance = shell.GetComponent<Rigidbody>();
+
                 //Instancia del proyectil en el servidor
                 NetworkServer.Spawn(shell);
-                //shellExplosion.ShellVelocity = velFactor * m_CurrentLaunchForce;
-                //shellInstance
+
                 // Set the shell's velocity to the launch force in the fire position's forward direction
-              
-                //shellInstance.velocity = currentLaunchForce * m_FireTransform.forward * VelTest;
-
                 shellInstance.velocity = currentLaunchForce * m_FireTransform.forward * velFactor;
-                VelocityCorrection(shell, shellInstance.velocity);
-
-                //Toma la velocidad de la variable de acuerdo al arma establecida
-                //shellInstance.velocity *= VelTest;
-
+                RpcFire(shell, shellInstance.velocity);
 
                 // Change the clip to the firing clip and play it
                 m_ShootingAudio.clip = m_FireClip;
@@ -239,7 +218,7 @@ namespace Complete
         }
 
         [ClientRpc] 
-        private void VelocityCorrection(GameObject go, Vector3 vel)
+        private void RpcFire(GameObject go, Vector3 vel)
         {
                 go.GetComponent<Rigidbody>().velocity = vel;
         }
