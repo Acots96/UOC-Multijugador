@@ -45,6 +45,7 @@ public class TankNaming : NetworkBehaviour
             playfabController = PlayfabController._instance;
 
             currentName = playfabController.userDisplayName;
+            tmpro_tankName.text = currentName;
             
             input_playerNameGO = GameObject.FindGameObjectWithTag("PlayerNameInputField");
             inputField_playerName = input_playerNameGO.GetComponent<InputField>();
