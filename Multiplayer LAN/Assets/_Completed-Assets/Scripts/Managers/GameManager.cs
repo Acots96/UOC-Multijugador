@@ -3,10 +3,11 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using Mirror;
 
 namespace Complete
 {
-    public class GameManager : MonoBehaviour
+    public class GameManager : NetworkBehaviour
     {
         public int m_NumRoundsToWin = 5;            // The number of rounds a single player has to win to win the game
         public float m_StartDelay = 3f;             // The delay between the start of RoundStarting and RoundPlaying phases
@@ -27,7 +28,11 @@ namespace Complete
         private static GameManager Instance;
         public List<Transform> npcsTanks, playersTanks;
 
+        //public SyncList<GameObject> TanksOnMatch = new SyncList<GameObject>();
 
+        [SyncVar] public bool InRound = false;
+
+         
         private void Awake() {
             if (Instance) {
                 Destroy(Instance);
@@ -75,6 +80,11 @@ namespace Complete
          * Siempre se comprueba que el tanque ya exista (o no) en las
          * listas antes de realizar operaciones, para evitar duplicados.
          */
+
+        public static bool GetOnRound()
+        {
+            return Instance.InRound;
+        }
 
         private static void AddPlayer(Transform player) {
             if (!Instance.playersTanks.Contains(player))
@@ -148,10 +158,19 @@ namespace Complete
             m_CameraControl.m_Targets = targets.ToArray();
         }
 
+        [ClientRpc]
+        public void LaunchRound()
+        {
+            StartCoroutine(GameLoop());
+        }
+
 
         // This is called from start and will run each phase of the game one after another
         private IEnumerator GameLoop()
         {
+
+            yield return StartCoroutine(WaitingPlayers());
+
             // Start off by running the 'RoundStarting' coroutine but don't return until it's finished
             yield return StartCoroutine(RoundStarting());
 
@@ -180,7 +199,7 @@ namespace Complete
         {
             // As soon as the round starts reset the tanks and make sure they can't move
             ResetAllTanks();
-            DisableTankControl();
+            //DisableTankControl();
 
             // Snap the camera's zoom and position to something appropriate for the reset tanks
             m_CameraControl.SetStartPositionAndSize();
@@ -194,6 +213,22 @@ namespace Complete
             yield return null;
         }
 
+
+        private IEnumerator WaitingPlayers()
+        {
+            // As soon as the round begins playing let the players control the tanks
+            DisableTankControl();
+
+            // Clear the text from the screen
+            m_MessageText.text = "Waiting for More Players";
+
+            // While there is not one tank left...
+            while (!MoreThanOneTank())
+            {
+                // ... return on the next frame
+                yield return null;
+            }
+        }
 
         private IEnumerator RoundPlaying()
         {
@@ -241,26 +276,48 @@ namespace Complete
         }
 
 
+        private bool MoreThanOneTank()
+        {
+            // Skip all rounds logic
+
+            // Start the count of tanks left at zero.
+            int numTanksLeft = 0;
+
+            foreach (Transform playerTank in playersTanks)
+            {
+                numTanksLeft++;
+            }
+
+            // If there are one or fewer tanks remaining return true, otherwise return false.
+            return numTanksLeft >= 2;
+        }
+
+
         // This is used to check if there is one or fewer tanks remaining and thus the round should end
         private bool OneTankLeft()
         {
             // Skip all rounds logic
 
-/*            // Start the count of tanks left at zero.
+           // Start the count of tanks left at zero.
             int numTanksLeft = 0;
 
+            foreach (Transform playerTank in playersTanks)
+            {
+                numTanksLeft++;
+            }
+
             // Go through all the tanks...
-            for (int i = 0; i < m_Tanks.Length; i++)
+/*            for (int i = 0; i < m_Tanks.Length; i++)
             {
                 // ... and if they are active, increment the counter.
                 if (m_Tanks[i].m_Instance.activeSelf)
                     numTanksLeft++;
-            }
+            }*/
 
             // If there are one or fewer tanks remaining return true, otherwise return false.
-            return numTanksLeft <= 1; */
+            return numTanksLeft <= 1; 
 
-            return false;
+            //return false;
         }
         
         
@@ -340,6 +397,8 @@ namespace Complete
 
         private void EnableTankControl()
         {
+            Instance.InRound = true;
+
             for (int i = 0; i < m_Tanks.Length; i++)
             {
                 m_Tanks[i].EnableControl();
@@ -349,6 +408,8 @@ namespace Complete
 
         private void DisableTankControl()
         {
+            Instance.InRound = false;
+
             for (int i = 0; i < m_Tanks.Length; i++)
             {
                 m_Tanks[i].DisableControl();

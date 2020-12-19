@@ -28,18 +28,24 @@ public class TurretEnemy : NetworkBehaviour {
 
 
     private void Update() {
-        if (rateDeltaTime <= 0) {
-            Fire();
-            rateDeltaTime = Random.value * FireRateTime + 2f;
+
+        if (GameManager.GetOnRound())
+        {
+            if (rateDeltaTime <= 0)
+            {
+                Fire();
+                rateDeltaTime = Random.value * FireRateTime + 2f;
+            }
+            if (findTargetRateDeltaTime <= 0)
+            {
+                FindClosestTank();
+                findTargetRateDeltaTime = findTargetRateTime;
+            }
+            rateDeltaTime -= Time.deltaTime;
+            findTargetRateDeltaTime -= Time.deltaTime;
+            //
+            RotateSmoothly();
         }
-        if (findTargetRateDeltaTime <= 0) {
-            FindClosestTank();
-            findTargetRateDeltaTime = findTargetRateTime;
-        }
-        rateDeltaTime -= Time.deltaTime;
-        findTargetRateDeltaTime -= Time.deltaTime;
-        //
-        RotateSmoothly();
     }
 
 
