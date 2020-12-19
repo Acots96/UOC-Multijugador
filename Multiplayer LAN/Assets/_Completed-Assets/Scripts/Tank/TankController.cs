@@ -14,16 +14,28 @@ public class TankController : NetworkBehaviour {
      */
 
     private void Start() {
-        Complete.GameManager.AddTank(transform);
+        AddATank();
     }
     private void OnEnable() {
-        Complete.GameManager.AddTank(transform);
+        AddATank();
     }
 
     private void OnDisable() {
-        Complete.GameManager.RemoveTank(transform);
+        RemoveATank();
     }
     private void OnDestroy() {
+        RemoveATank();
+    }
+
+    [Command]
+    void AddATank()
+    {
+        Complete.GameManager.AddTank(transform);
+    }
+
+    [Command]
+    void RemoveATank()
+    {
         Complete.GameManager.RemoveTank(transform);
     }
 

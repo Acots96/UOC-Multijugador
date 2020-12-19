@@ -26,9 +26,10 @@ namespace Complete
 
 
         private static GameManager Instance;
-        public List<Transform> npcsTanks, playersTanks;
+        //public List<Transform> npcsTanks, playersTanks;
 
-        //public SyncList<GameObject> TanksOnMatch = new SyncList<GameObject>();
+        public SyncList<Transform> npcsTanks = new SyncList<Transform>();
+        public SyncList<Transform> playersTanks = new SyncList<Transform>();
 
         [SyncVar] public bool InRound = false;
 
@@ -40,8 +41,8 @@ namespace Complete
             }
             Instance = this;
 
-            npcsTanks = new List<Transform>();
-            playersTanks = new List<Transform>();
+            //npcsTanks = new List<Transform>();
+            //playersTanks = new List<Transform>();
         }
 
         private void Start()
@@ -86,6 +87,7 @@ namespace Complete
             return Instance.InRound;
         }
 
+
         private static void AddPlayer(Transform player) {
             if (!Instance.playersTanks.Contains(player))
                 Instance.playersTanks.Add(player);
@@ -98,6 +100,7 @@ namespace Complete
             if (!Instance.npcsTanks.Contains(enemy))
                 Instance.npcsTanks.Add(enemy);
         }
+
         private static void RemoveEnemy(Transform enemy) {
             if (Instance.npcsTanks.Contains(enemy))
                 Instance.npcsTanks.Remove(enemy);
@@ -109,6 +112,8 @@ namespace Complete
                 AddPlayer(tank);
             Instance.SetCameraTargets();
         }
+
+
         public static void RemoveTank(Transform tank) {
             if (tank.tag.Equals("Enemy"))
                 RemoveEnemy(tank);
@@ -116,18 +121,18 @@ namespace Complete
                 RemovePlayer(tank);
             Instance.SetCameraTargets();
         }
-        private static void SetEnemies(List<Transform> npcs) {
+        private static void SetEnemies(SyncList<Transform> npcs) {
             Instance.npcsTanks = npcs;
             Instance.SetCameraTargets();
         }
 
-        public static List<Transform> GetNpcsTanks() {
+        public static SyncList<Transform> GetNpcsTanks() {
             return Instance.npcsTanks;
         }
-        public static List<Transform> GetPlayersTanks() {
+
+        public static SyncList<Transform> GetPlayersTanks() {
             return Instance.playersTanks;
         }
-
 
         private void SetCameraTargets()
         {

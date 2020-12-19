@@ -53,7 +53,6 @@ public class TankEnemy : NetworkBehaviour {
         }
     }
 
-
     private void FindClosestTank() {
         Vector3 pos = transform.position;
         //
