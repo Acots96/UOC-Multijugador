@@ -90,10 +90,14 @@ namespace Complete
             return Instance.InRound;
         }
 
-        [Server]
         public static void TogglePlayerTank(Transform player, bool status)
         {
             Instance.RpcToggleTank(player, status);
+            if (!Instance.isLocalPlayer)
+            {                
+                Instance.ToggleTank(player, status);
+            }
+
         }
 
         private static void AddPlayer(Transform player) {
@@ -125,6 +129,14 @@ namespace Complete
             SetCameraTargets();
         }
 
+        [Server]
+        public void ToggleTank(Transform tank, bool status)
+        {
+            if (status)
+                tank.gameObject.SetActive(status);
+            else
+                tank.gameObject.SetActive(status);
+        }
 
         [ClientRpc]
         public void RpcToggleTank(Transform tank, bool status)
@@ -273,16 +285,18 @@ namespace Complete
         }
 
 
-/*        public static void IncreaseRoundNumber()
+        [Server]
+        void IncreaseRoundNumber()
         {
-            Instance.m_RoundNumber++;
+            m_RoundNumber++;
         }
 
-        public static void IncreaseWinsNumber(TankController tank)
+
+        [Server]
+        void IncreaseWinsNumber(TankController tank)
         {
             tank.m_Wins++;
-        }*/
-
+        }
 
         [ClientRpc]
         void RpcIncreaseRoundNumber()
@@ -308,15 +322,28 @@ namespace Complete
             m_RoundWinner = GetRoundWinner();
 
             if (isServer)
-                RpcIncreaseRoundNumber();
+                if (isLocalPlayer)
+                    RpcIncreaseRoundNumber();
+                else
+                    IncreaseRoundNumber();
 
             // If there is a winner, increment their score
             if (m_RoundWinner != null)
             {
                 if (isServer)
+                {
                     //m_RoundWinner.m_Wins++;
-                    RpcIncreaseWinsNumber(m_RoundWinner);
+                    if (isLocalPlayer)
+                    {
+                        RpcIncreaseWinsNumber(m_RoundWinner);
+                    }
+                    else
+                    {
+                        IncreaseWinsNumber(m_RoundWinner);
+                        
+                    }
                     m_RoundWinner.GetComponent<TankHealth>().RpcRandomPos();
+                }
             }
 
             //Para evitar que no haya sincronización en el texto y la variable
@@ -433,8 +460,19 @@ namespace Complete
 
             foreach (Transform playerTank in TotalPlayersInGame)
             {
-                if(!playerTank.gameObject.activeSelf)
-                TogglePlayerTank(playerTank, true);
+                if (!playerTank.gameObject.activeSelf)
+                {
+                    if (isServer)
+                    {
+                        TogglePlayerTank(playerTank, true);
+                    }
+                    else
+                    {
+                        RpcToggleTank(playerTank, true);
+                    }
+
+                }
+
             }
         }
 
