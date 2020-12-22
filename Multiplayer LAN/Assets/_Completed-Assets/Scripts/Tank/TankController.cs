@@ -6,6 +6,8 @@ using UnityEngine.UI;
 
 public class TankController : NetworkBehaviour {
 
+     [SyncVar] public int m_Wins;                    // Variable Sincronizada para almacenar rondas ganadas
+
     /** metodos para indicar al GameManager que debe tener en cuenta 
      * (o dejar de tener en cuenta) este tanque.
      * 
@@ -14,19 +16,30 @@ public class TankController : NetworkBehaviour {
      */
 
     private void Start() {
-        Complete.GameManager.AddTank(transform);
-    }
-    private void OnEnable() {
-        Complete.GameManager.AddTank(transform);
-    }
+            Complete.GameManager.AddTank(transform);
+        }
+        private void OnEnable() {
+            Complete.GameManager.AddTank(transform);
+        if (isLocalPlayer)
+            CmdChangeStatusofTank(this.gameObject.transform, true);
+        }
 
-    private void OnDisable() {
-        Complete.GameManager.RemoveTank(transform);
-    }
-    private void OnDestroy() {
-        Complete.GameManager.RemoveTank(transform);
-    }
+        private void OnDisable() {
+            Complete.GameManager.RemoveTank(transform);
+        if (isLocalPlayer)
+            CmdChangeStatusofTank(this.gameObject.transform, false);
 
+    }
+        private void OnDestroy() {
+            Complete.GameManager.RemoveTank(transform);
+        }
+
+
+        [Command]
+        void CmdChangeStatusofTank(Transform player, bool status)
+        {
+            Complete.GameManager.TogglePlayerTank(player, status);
+        }
 
     //Coloring
 
@@ -47,7 +60,14 @@ public class TankController : NetworkBehaviour {
         }
         string[] s = PlayerPrefs.GetString("SelectedColor").Split(';');
         CmdColorChanged(new Color(float.Parse(s[0]), float.Parse(s[1]), float.Parse(s[2])));
-        //
+        
+        ///Ajuste para lo de la Cámara
+        Debug.Log("Local Player In");
+        if (!isServer)
+        {
+            Complete.GameManager.SetCameraTargets();
+        }
+
         base.OnStartLocalPlayer();
     }
 

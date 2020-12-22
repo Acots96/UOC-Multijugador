@@ -149,8 +149,11 @@ namespace Complete
         {
             if (!isLocalPlayer) return;
             // Adjust the rigidbodies position and orientation in FixedUpdate
-            Move();
-            Turn();
+            if (GameManager.GetOnRound())
+            {
+                Move();
+                Turn();
+            }
         }
 
         [Client]

@@ -28,20 +28,25 @@ public class TurretEnemy : NetworkBehaviour {
 
 
     private void Update() {
-        if (rateDeltaTime <= 0) {
-            Fire();
-            rateDeltaTime = Random.value * FireRateTime + 2f;
-        }
-        if (findTargetRateDeltaTime <= 0) {
-            FindClosestTank();
-            findTargetRateDeltaTime = findTargetRateTime;
-        }
-        rateDeltaTime -= Time.deltaTime;
-        findTargetRateDeltaTime -= Time.deltaTime;
-        //
-        RotateSmoothly();
-    }
 
+        if (GameManager.GetOnRound())  //Flag para desactivar la torreta mientras no este durante la ronda
+        {
+            if (rateDeltaTime <= 0)
+            {
+                Fire();
+                rateDeltaTime = Random.value * FireRateTime + 2f;
+            }
+            if (findTargetRateDeltaTime <= 0)
+            {
+                FindClosestTank();
+                findTargetRateDeltaTime = findTargetRateTime;
+            }
+            rateDeltaTime -= Time.deltaTime;
+            findTargetRateDeltaTime -= Time.deltaTime;
+            //
+            RotateSmoothly();
+        }
+    }
 
 
     private void FindClosestTank() {

@@ -8,7 +8,7 @@ using TMPro;
 
 public class LobbyMenu : NetworkManager
 {
-    private NetworkManager manager;
+    public static NetworkManager manager;
     //public string serverIP = "localhost";
 
     [SerializeField] private GameObject playerSpawnerSystem = null;

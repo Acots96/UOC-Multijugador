@@ -29,24 +29,29 @@ public class TankEnemy : NetworkBehaviour {
 
 
     private void Update() {
-        if (rateDeltaTime <= 0) {
-            Fire();
-            rateDeltaTime = Random.value * FireRateTime + 2f;
-        }
-        if (findTargetRateDeltaTime <= 0) {
-            FindClosestTank();
-            findTargetRateDeltaTime = findTargetRateTime;
-        }
-        rateDeltaTime -= Time.deltaTime;
-        findTargetRateDeltaTime -= Time.deltaTime;
-        //
-        RotateSmoothly();
-        if (!targetTr)
-            return;
-        if (Vector3.Distance(targetTr.position, tr.position) > MinDistanceToStop)
-            tr.position += tr.forward * Speed * Time.deltaTime;
-    }
 
+        if (GameManager.GetOnRound())  //Flag para desactivar el enemigo mientras no este durante la ronda
+        {
+            if (rateDeltaTime <= 0)
+            {
+                Fire();
+                rateDeltaTime = Random.value * FireRateTime + 2f;
+            }
+            if (findTargetRateDeltaTime <= 0)
+            {
+                FindClosestTank();
+                findTargetRateDeltaTime = findTargetRateTime;
+            }
+            rateDeltaTime -= Time.deltaTime;
+            findTargetRateDeltaTime -= Time.deltaTime;
+            //
+            RotateSmoothly();
+            if (!targetTr)
+                return;
+            if (Vector3.Distance(targetTr.position, tr.position) > MinDistanceToStop)
+                tr.position += tr.forward * Speed * Time.deltaTime;
+        }
+    }
 
     private void FindClosestTank() {
         Vector3 pos = transform.position;

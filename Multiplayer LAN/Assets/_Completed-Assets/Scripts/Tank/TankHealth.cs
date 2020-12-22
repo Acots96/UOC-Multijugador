@@ -13,14 +13,14 @@ namespace Complete
         public Color m_ZeroHealthColor = Color.red;         // The color the health bar will be when on no health
         public GameObject m_ExplosionPrefab;                // A prefab that will be instantiated in Awake, then used whenever the tank dies
 
-        
+
         private AudioSource m_ExplosionAudio;               // The audio source to play when the tank explodes
         private ParticleSystem m_ExplosionParticles;        // The particle system the will play when the tank is destroyed
-        
+
         [SyncVar(hook = "OnChangeHealth")]
         public float m_CurrentHealth = m_StartingHealth;                      // How much health the tank currently has
-        
-        private bool m_Dead;                                // Has the tank been reduced beyond zero health yet?
+
+        [SyncVar] private bool m_Dead;                                // Has the tank been reduced beyond zero health yet?
 
 
         public bool destroyOnDeath = false;
@@ -140,9 +140,16 @@ namespace Complete
 
             // Turn the tank off
             //gameObject.SetActive(false);
+            //CmdChangeStatusofTank(transform, false);
             RpcRespawn();
             m_Dead = false;
             //gameObject.SetActive(true);
+        }
+
+        [Command]
+        void CmdChangeStatusofTank(Transform player, bool status)
+        {
+            GameManager.TogglePlayerTank(player, status); 
         }
 
         [ClientRpc]
@@ -151,6 +158,11 @@ namespace Complete
             //gameObject.GetComponent<Rigidbody>().velocity = Vector3.zero;
             Vector3 spawnPoint = GetPlayerSpawnPoint();
             transform.position = spawnPoint;
+            if (isLocalPlayer)
+            {
+
+                CmdChangeStatusofTank(transform, false);
+            }
         }
     }
 }

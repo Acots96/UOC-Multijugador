@@ -19,7 +19,7 @@ public class TankNaming : NetworkBehaviour
 
     [SyncVar(hook = "SyncPlayerNameUpdate")]
     // private string currentName = startingName;
-    private string currentName;
+    public string currentName;
     
     private void SyncPlayerNameUpdate(string oldName, string newName)
     {
@@ -35,6 +35,7 @@ public class TankNaming : NetworkBehaviour
     public void CmdSetCurrentName(string currentName)
     {
         SyncPlayerNameUpdate(this.currentName, currentName);
+        //TankController.UpdateName(currentName);
     }
 
     // Start is called before the first frame update
