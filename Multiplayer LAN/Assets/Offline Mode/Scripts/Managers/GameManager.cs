@@ -585,7 +585,7 @@ namespace Offline
         // Controlls event for spawning new player
         public void OnSpawnPlayer(InputAction.CallbackContext ctx)
         {
-            Debug.Log("PerformSpawn");
+            // Debug.Log("PerformSpawn");
             if (ctx.performed && m_ActualPlayersNum < 4)
             {
                 SpawnNewPlayerTank();
