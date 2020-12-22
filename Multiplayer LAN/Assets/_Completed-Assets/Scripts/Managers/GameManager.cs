@@ -253,9 +253,6 @@ namespace Complete
                 yield return null;
             }
 
-            /*            if(isServer)
-                        RpcLaunchRound();*/
-
             StartCoroutine(GameLoop());
         }
 
