@@ -6,18 +6,7 @@ using UnityEngine.UI;
 
 public class TankController : NetworkBehaviour {
 
-     [SyncVar] public int m_Wins;                    // The number of wins this player has so far
-/*               public string m_ColoredPlayerText;    // A string that represents the player with their number colored to match their tank
-    public string PlayerName = "Player";
-
-    private static TankController Instance;
-
-    public static void UpdateName(string playerName)
-    {
-        Instance.PlayerName = playerName;
-    }
-*/
-
+     [SyncVar] public int m_Wins;                    // Variable Sincronizada para almacenar rondas ganadas
 
     /** metodos para indicar al GameManager que debe tener en cuenta 
      * (o dejar de tener en cuenta) este tanque.
@@ -45,24 +34,6 @@ public class TankController : NetworkBehaviour {
             Complete.GameManager.RemoveTank(transform);
         }
 
-    //Método para añadir tanques a la SyncList
-/*    [Command]
-    public void CmdAddTankToMatch(Transform tank)
-    {
-        Complete.GameManager.AddTankToMatch(tank);
-    }*/
-
-    /*    [Command]
-        void AddATank()
-        {
-            Complete.GameManager.AddTank(transform);
-        }
-
-        [Command]
-        void RemoveATank()
-        {
-            Complete.GameManager.RemoveTank(transform);
-        }*/
 
         [Command]
         void CmdChangeStatusofTank(Transform player, bool status)
@@ -74,14 +45,6 @@ public class TankController : NetworkBehaviour {
 
     public void Awake() {
         renderers = gameObject.GetComponentsInChildren<MeshRenderer>();
-/*        m_ColoredPlayerText = "<color=#" + ColorUtility.ToHtmlStringRGB(Color.white) + "> " + PlayerName + "</color>";
-
-        if (Instance)
-        {
-            Destroy(Instance);
-            Instance = null;
-        }
-        Instance = this;*/
     }
 
     /**
@@ -97,9 +60,6 @@ public class TankController : NetworkBehaviour {
         }
         string[] s = PlayerPrefs.GetString("SelectedColor").Split(';');
         CmdColorChanged(new Color(float.Parse(s[0]), float.Parse(s[1]), float.Parse(s[2])));
-   
-/*      CmdAddTankToMatch(this.gameObject.transform); // Se añade a la SyncList
-        Debug.Log("Add to Sync List: "+this.gameObject.transform);*/
         
         ///Ajuste para lo de la Cámara
         Debug.Log("Local Player In");

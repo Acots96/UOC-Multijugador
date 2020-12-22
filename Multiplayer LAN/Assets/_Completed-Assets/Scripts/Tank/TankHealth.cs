@@ -143,15 +143,13 @@ namespace Complete
             //CmdChangeStatusofTank(transform, false);
             RpcRespawn();
             m_Dead = false;
-            
             //gameObject.SetActive(true);
         }
 
         [Command]
         void CmdChangeStatusofTank(Transform player, bool status)
         {
-            GameManager.TogglePlayerTank(player, status);
-            
+            GameManager.TogglePlayerTank(player, status); 
         }
 
         [ClientRpc]
@@ -162,8 +160,7 @@ namespace Complete
             transform.position = spawnPoint;
             if (isLocalPlayer)
             {
-                //GameManager.TogglePlayerTank(transform, false);
-                //GameManager.DisablePlayerTank(transform, true);
+
                 CmdChangeStatusofTank(transform, false);
             }
         }

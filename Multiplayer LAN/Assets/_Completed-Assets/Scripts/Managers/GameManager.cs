@@ -9,7 +9,7 @@ namespace Complete
 {
     public class GameManager : NetworkBehaviour
     {
-        [SyncVar] public int m_NumRoundsToWin = 5;   // The number of rounds a single player has to win to win the game
+        public int m_NumRoundsToWin = 5;             // The number of rounds a single player has to win to win the game
         public float m_StartDelay = 3f;             // The delay between the start of RoundStarting and RoundPlaying phases
         public float m_EndDelay = 3f;               // The delay between the end of RoundPlaying and RoundEnding phases
         public CameraControl m_CameraControl;       // Reference to the CameraControl script for control during different phases
@@ -20,53 +20,22 @@ namespace Complete
         public TankHealth[] allTanks;
 
 
-        [SyncVar] public int m_RoundNumber;                  // Which round the game is currently on
+        [SyncVar] public int m_RoundNumber;          // Variable sincronizada para saber el numero de rondas
         private WaitForSeconds m_StartWait;         // Used to have a delay whilst the round starts
         private WaitForSeconds m_EndWait;           // Used to have a delay whilst the round or game ends
         //private TankManager m_RoundWinner;          // Reference to the winner of the current round.  Used to make an announcement of who won
         //private TankManager m_GameWinner;           // Reference to the winner of the game.  Used to make an announcement of who won
 
-        private TankController m_RoundWinner;          // Reference to the winner of the current round.  Used to make an announcement of who won
-        private TankController m_GameWinner;           // Reference to the winner of the game.  Used to make an announcement of who won
+        private TankController m_RoundWinner;          // Se cambia a Tank Controller para usar el código que implementamos
+        private TankController m_GameWinner;           // Se cambia a Tank Controller para usar el código que implementamos
 
 
         private static GameManager Instance;
         public List<Transform> npcsTanks, playersTanks,TotalPlayersInGame;
 
+        [SyncVar] public bool InRound = false;    // Variable sincronizada para saber si estamos en medio de una ronda
 
-        [SyncVar] public bool InRound = false;
-        /*
 
-                //Método en el que se añade el tanque a la SyncList
-                public static void AddTankToMatch(Transform tank)
-                {
-                    if (tank != null)
-                    {
-                        Instance.Players.Add(tank);
-                        Instance.PlayersTest.Add(tank);
-                    }
-                }*/
-
-        //Método donde se organiza la cámara
-        public static void SetCameraTargets()
-        {
-            //Se obtiene la lista de objetos que tienen salud, es decir los tanques incluyendo los NPCS
-            Instance.allTanks = FindObjectsOfType<TankHealth>();
-
-            //Se asigna a la variable la cantidad de los objetos que estan activos en el momento
-            Transform[] targets = new Transform[Instance.allTanks.Length];
-
-            // For each of these transforms...
-            for (int i = 0; i < Instance.allTanks.Length; i++)
-            {
-                // ... set it to the appropriate tank transform
-                targets[i] = Instance.allTanks[i].transform;
-            }
-
-            // These are the targets the camera should follow
-            Instance.m_CameraControl.m_Targets = targets;
-            //Debug.Log("Tank Number" + tanks.Length);
-        }
 
         private void Awake() {
             if (Instance) {
@@ -75,8 +44,8 @@ namespace Complete
             }
             Instance = this;
 
-            //npcsTanks = new List<Transform>();
-            //playersTanks = new List<Transform>();
+            npcsTanks = new List<Transform>();
+            playersTanks = new List<Transform>();
         }
 
         private void Start()
@@ -88,8 +57,6 @@ namespace Complete
             SpawnAllTanks();
             SetCameraTargets();
 
-            // Once the tanks have been created and the camera is using them as targets, start the game
-            //StartCoroutine (GameLoop ());
             StartCoroutine(WaitingPlayers());
         }
 
@@ -117,6 +84,7 @@ namespace Complete
          * listas antes de realizar operaciones, para evitar duplicados.
          */
 
+        //    Método para comprobar si el round esta activo
         public static bool GetOnRound()
         {
             return Instance.InRound;
@@ -187,40 +155,25 @@ namespace Complete
             return Instance.playersTanks;
         }
 
-        //Método anterior de Setear Cámara
-/*        private void SetCameraTargets()
+        //Método donde se organiza la cámara
+        public static void SetCameraTargets()
         {
-            // Create a collection of transforms the same size as the number of tanks
-            //Transform[] targets = new Transform[m_Tanks.Length + npcsTanks.Count];
-            List<Transform> targets = new List<Transform>();
+            //Se obtiene la lista de objetos que tienen salud, es decir los tanques incluyendo los NPCS
+            Instance.allTanks = FindObjectsOfType<TankHealth>();
+
+            //Se asigna a la variable la cantidad de los objetos que estan activos en el momento
+            Transform[] targets = new Transform[Instance.allTanks.Length];
 
             // For each of these transforms...
-            *//*for (int i = 0; i < m_Tanks.Length; i++)
+            for (int i = 0; i < Instance.allTanks.Length; i++)
             {
                 // ... set it to the appropriate tank transform
-                targets.Add(m_Tanks[i].m_Instance.transform);
-            }*//*
-
-            for (int i = 0; i < playersTanks.Count; i++) {
-                targets.Add(playersTanks[i]);
+                targets[i] = Instance.allTanks[i].transform;
             }
-
-            for (int i = 0; i < npcsTanks.Count; i++) {
-                //Debug.Log(npcsTanks[i]);
-                targets.Add(npcsTanks[i]);
-            }
-
-            //foreach (Transform tr in targets)
-            //    Debug.Log(tr.gameObject);
 
             // These are the targets the camera should follow
-            m_CameraControl.m_Targets = targets.ToArray();
-        }*/
-
-        [ClientRpc]
-        public void RpcLaunchRound()
-        {
-            StartCoroutine(GameLoop());
+            Instance.m_CameraControl.m_Targets = targets;
+            //Debug.Log("Tank Number" + tanks.Length);
         }
 
 
@@ -259,8 +212,8 @@ namespace Complete
         void StopServer()
         {
             //SceneManager.LoadScene(1);
-            GameObject.Find("NetworkManager").GetComponent<LobbyMenu>().manager.StopServer();
-            GameObject.Find("NetworkManager").GetComponent<LobbyMenu>().manager.StopHost();
+            LobbyMenu.manager.StopServer();
+            LobbyMenu.manager.StopHost();
         }
 
 
@@ -359,7 +312,7 @@ namespace Complete
             yield return m_EndWait;
         }
 
-
+        //Nuevo metodo que solo empieza la partida cuando hay un cliente
         private bool MoreThanOneTank()
         {
             // Skip all rounds logic
@@ -390,21 +343,10 @@ namespace Complete
                 numTanksLeft++;
             }
 
-            // Go through all the tanks...
-/*            for (int i = 0; i < m_Tanks.Length; i++)
-            {
-                // ... and if they are active, increment the counter.
-                if (m_Tanks[i].m_Instance.activeSelf)
-                    numTanksLeft++;
-            }*/
-
-            // If there are one or fewer tanks remaining return true, otherwise return false.
             return numTanksLeft <= 1; 
-
-            //return false;
         }
 
-
+        //Ajuste para almacenar el ganador de la ronda
         private TankController GetRoundWinner()
         {
 
@@ -420,26 +362,7 @@ namespace Complete
             return null;
         }
 
-        // This function is to find out if there is a winner of the round
-        // This function is called with the assumption that 1 or fewer tanks are currently active
-        /*        private TankManager GetRoundWinner()
-                {
-
-                    // Go through all the tanks...
-                    for (int i = 0; i < m_Tanks.Length; i++)
-                    {
-                        // ... and if one of them is active, it is the winner so return it
-                        if (m_Tanks[i].m_Instance.activeSelf)
-                        {
-                            return m_Tanks[i];
-                        }
-                    }
-
-                    // If none of the tanks are active it is a draw so return null
-                    return null;
-                }*/
-
-
+        //Ajuste para almacenar el ganador
         private TankController GetGameWinner()
         {
             // Go through all the tanks...
@@ -456,25 +379,7 @@ namespace Complete
             return null;
         }
 
-
-        // This function is to find out if there is a winner of the game
-        /*        private TankManager GetGameWinner()
-                {
-                    // Go through all the tanks...
-                    for (int i = 0; i < m_Tanks.Length; i++)
-                    {
-                        // ... and if one of them has enough rounds to win the game, return it
-                        if (m_Tanks[i].m_Wins == m_NumRoundsToWin)
-                        {
-                            return m_Tanks[i];
-                        }
-                    }
-
-                    // If no tanks have enough rounds to win, return null
-                    return null;
-                }*/
-
-
+        //Ajuste para Mensaje Final
         private string EndMessage()
         {
             // By default when a round ends there are no winners so the default end message is a draw
@@ -500,34 +405,7 @@ namespace Complete
             return message;
         }
 
-        // Returns a string message to display at the end of each round
-/*        private string EndMessage()
-        {
-            // By default when a round ends there are no winners so the default end message is a draw
-            string message = "DRAW!";
-
-            // If there is a winner then change the message to reflect that
-            if (m_RoundWinner != null)
-                message = m_RoundWinner.m_ColoredPlayerText + " WINS THE ROUND!";
-
-            // Add some line breaks after the initial message
-            message += "\n\n\n\n";
-
-            // Go through all the tanks and add each of their scores to the message
-            for (int i = 0; i < m_Tanks.Length; i++)
-            {
-                message += m_Tanks[i].m_ColoredPlayerText + ": " + m_Tanks[i].m_Wins + " WINS\n";
-            }
-
-            // If there is a game winner, change the entire message to reflect that
-            if (m_GameWinner != null)
-                message = m_GameWinner.m_ColoredPlayerText + " WINS THE GAME!";
-
-            return message;
-        }*/
-
-
-        // This function is used to turn all the tanks back on and reset their positions and properties
+        //Reactiva los objetos de los tanques jugadores que se han unido a la partida
         private void ResetAllTanks()
         {
 
@@ -536,33 +414,21 @@ namespace Complete
                 if(!playerTank.gameObject.activeSelf)
                 TogglePlayerTank(playerTank, true);
             }
-
-/*            for (int i = 0; i < m_Tanks.Length; i++)
-            {
-                m_Tanks[i].Reset();
-            }*/
         }
 
-
+        //Activa el control del tanque a partir de la variable de estado InRound
         private void EnableTankControl()
         {
             Instance.InRound = true;
 
-/*            for (int i = 0; i < m_Tanks.Length; i++)
-            {
-                m_Tanks[i].EnableControl();
-            }*/
         }
 
-
+        
+        //Desactiva el control del tanque a partir de la variable de estado InRound
         private void DisableTankControl()
         {
             Instance.InRound = false;
 
-/*            for (int i = 0; i < m_Tanks.Length; i++)
-            {
-                m_Tanks[i].DisableControl();
-            }*/
         }
     }
 }

@@ -29,7 +29,7 @@ public class TurretEnemy : NetworkBehaviour {
 
     private void Update() {
 
-        if (GameManager.GetOnRound())
+        if (GameManager.GetOnRound())  //Flag para desactivar la torreta mientras no este durante la ronda
         {
             if (rateDeltaTime <= 0)
             {
