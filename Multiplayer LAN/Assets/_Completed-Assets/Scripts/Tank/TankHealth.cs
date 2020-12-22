@@ -143,6 +143,7 @@ namespace Complete
             //CmdChangeStatusofTank(transform, false);
             RpcRespawn();
             m_Dead = false;
+           // CmdChangeStatusofTank(transform, false);
             //gameObject.SetActive(true);
         }
 
@@ -152,17 +153,34 @@ namespace Complete
             GameManager.TogglePlayerTank(player, status); 
         }
 
+
+        [ClientRpc]
+        public void RpcRandomPos()
+        {
+            Vector3 spawnPoint = GetPlayerSpawnPoint();
+            transform.position = spawnPoint;
+        }
+
+
         [ClientRpc]
         void RpcRespawn()
         {
             //gameObject.GetComponent<Rigidbody>().velocity = Vector3.zero;
-            Vector3 spawnPoint = GetPlayerSpawnPoint();
-            transform.position = spawnPoint;
-            if (isLocalPlayer)
+            /*Vector3 spawnPoint = GetPlayerSpawnPoint();
+            transform.position = spawnPoint;*/
+            RpcRandomPos();
+            if (isServer)
             {
-
-                CmdChangeStatusofTank(transform, false);
+                if (isLocalPlayer)
+                {
+                    CmdChangeStatusofTank(transform, false);
+                }
+                else
+                {
+                    GameManager.TogglePlayerTank(transform, false);
+                }
             }
+
         }
     }
 }

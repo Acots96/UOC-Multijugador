@@ -273,13 +273,33 @@ namespace Complete
         }
 
 
+/*        public static void IncreaseRoundNumber()
+        {
+            Instance.m_RoundNumber++;
+        }
+
+        public static void IncreaseWinsNumber(TankController tank)
+        {
+            tank.m_Wins++;
+        }*/
+
+
+        [ClientRpc]
+        void RpcIncreaseRoundNumber()
+        {
+            m_RoundNumber++;
+        }
+
+        [ClientRpc]
+        void RpcIncreaseWinsNumber(TankController tank)
+        {
+            tank.m_Wins++;
+        }
+
         private IEnumerator RoundEnding()
         {
             // Stop tanks from moving
             DisableTankControl();
-
-            if (isServer)
-                m_RoundNumber++;
 
             // Clear the winner from the previous round
             m_RoundWinner = null;
@@ -287,11 +307,16 @@ namespace Complete
             // See if there is a winner now the round is over
             m_RoundWinner = GetRoundWinner();
 
+            if (isServer)
+                RpcIncreaseRoundNumber();
+
             // If there is a winner, increment their score
             if (m_RoundWinner != null)
             {
                 if (isServer)
-                    m_RoundWinner.m_Wins++;
+                    //m_RoundWinner.m_Wins++;
+                    RpcIncreaseWinsNumber(m_RoundWinner);
+                    m_RoundWinner.GetComponent<TankHealth>().RpcRandomPos();
             }
 
             //Para evitar que no haya sincronización en el texto y la variable
