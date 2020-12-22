@@ -49,7 +49,6 @@ public class TurretEnemy : NetworkBehaviour {
     }
 
 
-    [Command]
     private void FindClosestTank() {
         Vector3 pos = tr.position;
         //
