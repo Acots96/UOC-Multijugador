@@ -6,6 +6,8 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using Cinemachine;
 using System.Collections.Generic;
+using System.Linq;
+using Random = System.Random;
 
 namespace Offline
 {
@@ -18,6 +20,8 @@ namespace Offline
         public Text m_MessageText;                  // Reference to the overlay Text to display winning text, etc.
         public GameObject m_TankPrefab;             // Reference to the prefab the players will control.
         public TankManager[] m_Tanks;               // A collection of managers for enabling and disabling different aspects of the tanks.
+
+        public Transform[] m_AvailableSpawnPoints;
         
         public GameObject m_MultiplayerEventSystemPrefab;
         public UiButtonManager m_UiButtonManager;
@@ -34,6 +38,8 @@ namespace Offline
         private int m_ActualPlayersNum;
         private bool m_MaxPlayerNumReachedMessageShowing = false;
 
+        public bool[] m_SpawnPointsInUse;
+
         private void Start()
         {
             // Create the delays so they only have to be made once.
@@ -44,6 +50,8 @@ namespace Offline
             m_UiButtonManager.OnStartGame += StartGameMethod;
             m_CameraControl.OnTurnOffSplitScreen += TurnOffTankCameras;
             m_CameraControl.OnTurnOnSplitScreen += TurnOnTankCamerasAndRefreshSplitScreen;
+
+            m_SpawnPointsInUse = Enumerable.Repeat(false, m_AvailableSpawnPoints.Length).ToArray();
         }
 
         // When CameraControl invokes the method, it enables tank cameras and makes a refresh of
@@ -246,31 +254,65 @@ namespace Offline
             // For all the tanks...
             for (int i = 0; i < m_ActualPlayersNum; i++)
             {
+                Transform spawnPoint = GetSpawnPointFromAvailableList();
+                
+                Vector3 spawnPointPosition = spawnPoint.position;
+                Quaternion spawnPointRotation = spawnPoint.rotation;
+                
                 // ... create them, set their player number and references needed for control.
                 m_Tanks[i].m_Instance =
-                    Instantiate(m_TankPrefab, m_Tanks[i].m_SpawnPoint.position, m_Tanks[i].m_SpawnPoint.rotation) as GameObject;
+                    // Instantiate(m_TankPrefab, m_Tanks[i].m_SpawnPoint.position, m_Tanks[i].m_SpawnPoint.rotation) as GameObject;
+                    Instantiate(m_TankPrefab, spawnPointPosition, spawnPointRotation) as GameObject;
 
+                m_Tanks[i].m_SpawnPoint = spawnPoint;
+                
                 // Instantiates game object with the components to use new Unity Input System
                 m_Tanks[i].m_MultiplayerEventSystem =
-                    Instantiate(m_MultiplayerEventSystemPrefab, m_Tanks[i].m_SpawnPoint.position, m_Tanks[i].m_SpawnPoint.rotation) as GameObject;
+                    // Instantiate(m_MultiplayerEventSystemPrefab, m_Tanks[i].m_SpawnPoint.position, m_Tanks[i].m_SpawnPoint.rotation) as GameObject;
+                    Instantiate(m_MultiplayerEventSystemPrefab, spawnPointPosition, spawnPointRotation) as GameObject;
                 m_Tanks[i].m_PlayerNumber = i + 1;
                 m_Tanks[i].Setup();
                 AddCamera(i, m_MainCamera);
             }
         }
 
+        private Transform GetSpawnPointFromAvailableList()
+        {
+            int idx = UnityEngine.Random.Range(0, m_AvailableSpawnPoints.Length);
+            bool inUse = m_SpawnPointsInUse[idx];
+
+            while (inUse)
+            {
+                idx++;
+                if (idx >= m_AvailableSpawnPoints.Length) idx = 0;
+                inUse = m_SpawnPointsInUse[idx];
+            }
+
+            m_SpawnPointsInUse[idx] = true;
+            return m_AvailableSpawnPoints[idx];
+        }
+
         // Spawns new tank when game is running
         private void SpawnNewPlayerTank()
         {
+            Transform spawnPoint = GetSpawnPointFromAvailableList();
+                
+            Vector3 spawnPointPosition = spawnPoint.position;
+            Quaternion spawnPointRotation = spawnPoint.rotation;
+
             int i = m_ActualPlayersNum;
 
             // creates the tank
             m_Tanks[i].m_Instance =
-                    Instantiate(m_TankPrefab, m_Tanks[i].m_SpawnPoint.position, m_Tanks[i].m_SpawnPoint.rotation) as GameObject;
+                    // Instantiate(m_TankPrefab, m_Tanks[i].m_SpawnPoint.position, m_Tanks[i].m_SpawnPoint.rotation) as GameObject;
+                    Instantiate(m_TankPrefab, spawnPointPosition, spawnPointRotation) as GameObject;
+
+            m_Tanks[i].m_SpawnPoint = spawnPoint;
 
             // creates the input system prefab
             m_Tanks[i].m_MultiplayerEventSystem =
-                Instantiate(m_MultiplayerEventSystemPrefab, m_Tanks[i].m_SpawnPoint.position, m_Tanks[i].m_SpawnPoint.rotation) as GameObject;
+                // Instantiate(m_MultiplayerEventSystemPrefab, m_Tanks[i].m_SpawnPoint.position, m_Tanks[i].m_SpawnPoint.rotation) as GameObject;
+                Instantiate(m_MultiplayerEventSystemPrefab, spawnPointPosition, spawnPointRotation) as GameObject;
             m_Tanks[i].m_PlayerNumber = i + 1;
             m_Tanks[i].Setup();
             AddCamera(i, m_MainCamera);
@@ -394,8 +436,24 @@ namespace Offline
             string message = EndMessage ();
             m_MessageText.text = message;
 
+            // Reset tanks initial position
+            ResetTanksSpawnPoints();
+            
             // Wait for the specified length of time until yielding control back to the game loop.
             yield return m_EndWait;
+        }
+
+        private void ResetTanksSpawnPoints()
+        {
+            // for (int i = 0; i < m_SpawnPointsInUse.Length; i++)
+            // {
+            //     m_SpawnPointsInUse[i] = false;
+            // }
+            m_SpawnPointsInUse = Enumerable.Repeat(false, m_AvailableSpawnPoints.Length).ToArray();
+            foreach (TankManager mTank in m_Tanks)
+            {
+                mTank.m_SpawnPoint = GetSpawnPointFromAvailableList();
+            }
         }
 
 
@@ -527,6 +585,7 @@ namespace Offline
         // Controlls event for spawning new player
         public void OnSpawnPlayer(InputAction.CallbackContext ctx)
         {
+            Debug.Log("PerformSpawn");
             if (ctx.performed && m_ActualPlayersNum < 4)
             {
                 SpawnNewPlayerTank();
