@@ -26,7 +26,6 @@ public class TurretEnemy : NetworkBehaviour {
         FindClosestTank();
     }
 
-
     private void Update() {
 
         if (GameManager.GetOnRound())  //Flag para desactivar la torreta mientras no este durante la ronda
@@ -47,7 +46,6 @@ public class TurretEnemy : NetworkBehaviour {
             RotateSmoothly();
         }
     }
-
 
     private void FindClosestTank() {
         Vector3 pos = tr.position;
@@ -80,14 +78,13 @@ public class TurretEnemy : NetworkBehaviour {
         tr.rotation = Quaternion.Lerp(tr.rotation, Quaternion.LookRotation(forward), 0.1f);
     }
 
-    
     private void Fire() {
         if (!targetTr)
             return;
 
         GameObject shell = Instantiate(ShellGO, FireTransform.position, FireTransform.rotation);
         NetworkServer.Spawn(shell);
-        //
+    
         Vector3 targetPos = targetTr.position;
         Vector3 firePos = shell.transform.position;
         Vector3 vel = new Vector3(
@@ -97,9 +94,8 @@ public class TurretEnemy : NetworkBehaviour {
         );
         shell.transform.forward = vel;
         shell.GetComponent<Rigidbody>().velocity = vel;
-        //
+    
         RpcFire(shell, vel);
-
         FireSound.Play();
     }
 

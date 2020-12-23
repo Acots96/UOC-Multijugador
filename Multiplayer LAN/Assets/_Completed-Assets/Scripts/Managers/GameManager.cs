@@ -90,10 +90,14 @@ namespace Complete
             return Instance.InRound;
         }
 
-        [Server]
         public static void TogglePlayerTank(Transform player, bool status)
         {
             Instance.RpcToggleTank(player, status);
+            if (!Instance.isLocalPlayer)
+            {                
+                Instance.ToggleTank(player, status);
+            }
+
         }
 
         private static void AddPlayer(Transform player) {
@@ -125,6 +129,14 @@ namespace Complete
             SetCameraTargets();
         }
 
+        [Server]
+        public void ToggleTank(Transform tank, bool status)
+        {
+            if (status)
+                tank.gameObject.SetActive(status);
+            else
+                tank.gameObject.SetActive(status);
+        }
 
         [ClientRpc]
         public void RpcToggleTank(Transform tank, bool status)
@@ -222,6 +234,7 @@ namespace Complete
             // As soon as the round starts reset the tanks and make sure they can't move
             if (isServer)
                 ResetAllTanks();
+
             DisableTankControl();
 
             // Snap the camera's zoom and position to something appropriate for the reset tanks
@@ -273,13 +286,35 @@ namespace Complete
         }
 
 
+        [Server]
+        void IncreaseRoundNumber()
+        {
+            m_RoundNumber++;
+        }
+
+
+        [Server]
+        void IncreaseWinsNumber(TankController tank)
+        {
+            tank.m_Wins++;
+        }
+
+        [ClientRpc]
+        void RpcIncreaseRoundNumber()
+        {
+            m_RoundNumber++;
+        }
+
+        [ClientRpc]
+        void RpcIncreaseWinsNumber(TankController tank)
+        {
+            tank.m_Wins++;
+        }
+
         private IEnumerator RoundEnding()
         {
             // Stop tanks from moving
             DisableTankControl();
-
-            if (isServer)
-                m_RoundNumber++;
 
             // Clear the winner from the previous round
             m_RoundWinner = null;
@@ -287,11 +322,26 @@ namespace Complete
             // See if there is a winner now the round is over
             m_RoundWinner = GetRoundWinner();
 
+            if (isServer)
+                if (isLocalPlayer)
+                    RpcIncreaseRoundNumber();
+                else
+                    IncreaseRoundNumber();
+
             // If there is a winner, increment their score
             if (m_RoundWinner != null)
             {
                 if (isServer)
-                    m_RoundWinner.m_Wins++;
+                {
+                    if (isLocalPlayer)
+                    {
+                        RpcIncreaseWinsNumber(m_RoundWinner);
+                    }
+                    else
+                    {
+                        IncreaseWinsNumber(m_RoundWinner);
+                    }
+                }
             }
 
             //Para evitar que no haya sincronización en el texto y la variable
@@ -397,10 +447,20 @@ namespace Complete
 
             // If there is a game winner, change the entire message to reflect that
             if (m_GameWinner != null)
+            {
                 message = m_GameWinner.GetComponent<TankNaming>().currentName + " WINS THE GAME!";
-
+                NetworkIdentity playerIdentity = m_GameWinner.GetComponent<NetworkIdentity>();
+                UpdatePlayerStats(playerIdentity.connectionToClient);
+            }
             return message;
         }
+
+        [TargetRpc]
+        void UpdatePlayerStats(NetworkConnection target)
+        {
+            PlayfabController._instance.SetStats();
+        }
+
 
         //Reactiva los objetos de los tanques jugadores que se han unido a la partida
         private void ResetAllTanks()
@@ -408,8 +468,12 @@ namespace Complete
 
             foreach (Transform playerTank in TotalPlayersInGame)
             {
-                if(!playerTank.gameObject.activeSelf)
-                TogglePlayerTank(playerTank, true);
+                playerTank.GetComponent<TankHealth>().RpcRandomPos();
+                if (!playerTank.gameObject.activeSelf)
+                {
+                    RpcToggleTank(playerTank, true);
+
+                }
             }
         }
 

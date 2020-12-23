@@ -15,31 +15,37 @@ public class TankController : NetworkBehaviour {
      * algunos casos daba problemas.
      */
 
-    private void Start() {
-            Complete.GameManager.AddTank(transform);
-        }
-        private void OnEnable() {
-            Complete.GameManager.AddTank(transform);
+    private void Start()
+    {
+        Complete.GameManager.AddTank(transform);
+    }
+
+    private void OnEnable()
+    {
+        Complete.GameManager.AddTank(transform);
         if (isLocalPlayer)
             CmdChangeStatusofTank(this.gameObject.transform, true);
-        }
+    }
 
-        private void OnDisable() {
-            Complete.GameManager.RemoveTank(transform);
+    private void OnDisable()
+    {
+        Complete.GameManager.RemoveTank(transform);
         if (isLocalPlayer)
             CmdChangeStatusofTank(this.gameObject.transform, false);
 
     }
-        private void OnDestroy() {
-            Complete.GameManager.RemoveTank(transform);
-        }
+    private void OnDestroy()
+    {
+        Complete.GameManager.RemoveTank(transform);
+    }
 
 
-        [Command]
-        void CmdChangeStatusofTank(Transform player, bool status)
-        {
-            Complete.GameManager.TogglePlayerTank(player, status);
-        }
+    [Command]
+    void CmdChangeStatusofTank(Transform player, bool status)
+    {
+        Complete.GameManager.TogglePlayerTank(player, status);
+    }
+
 
     //Coloring
 
