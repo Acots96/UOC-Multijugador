@@ -5,6 +5,8 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using Mirror.Discovery;
 using TMPro;
+using System.Collections.Generic;
+using UnityEngine.Serialization;
 
 public class LobbyMenu : NetworkManager
 {
@@ -20,6 +22,8 @@ public class LobbyMenu : NetworkManager
     {
         manager = FindObjectOfType<NetworkManager>();
         AwakeColorsButtons();
+        OnGameTypeValueChanged(2);
+        OnTeamsGameValueChanged(0);
     }
 
     public void RunServer()
@@ -28,6 +32,8 @@ public class LobbyMenu : NetworkManager
         {
             if (!NetworkClient.active)
             {
+                if (gameType == GameType.LAN)
+                    networkDiscovery.AdvertiseServer();
                 manager.StartServer();
             }
         }
@@ -37,15 +43,19 @@ public class LobbyMenu : NetworkManager
 
     public void CreateGame()
     {
-        if (!NetworkClient.isConnected && !NetworkServer.active)
-        {
-            if (!NetworkClient.active)
-            {
-                manager.StartHost();
+        if (gameType == GameType.Local) {
+            SceneManager.LoadScene(LocalScene);
+        } else {
+            if (!NetworkClient.isConnected && !NetworkServer.active) {
+                if (!NetworkClient.active) {
+                    if (gameType == GameType.LAN)
+                        networkDiscovery.AdvertiseServer();
+                    manager.StartHost();
+                }
             }
-        }
 
-        AddressData();
+            AddressData();
+        }
     }
 
     public void JoinGame()
@@ -54,13 +64,17 @@ public class LobbyMenu : NetworkManager
         {
             if (!NetworkClient.active)
             {
-                //manager.networkAddress = serverIP;
-                if (!CheckValidIP()) {
-                    InvalidIpText.text = "Invalid IP. Must be like XXX.XXX.XXX.XXX (0 <= XXX <= 255)";
-                    return;
+                if (gameType == GameType.LAN) {                    
+                    manager.StartClient();
+                } else {
+                    //manager.networkAddress = serverIP;
+                    if (!CheckValidIP()) {
+                        InvalidIpText.text = "Invalid IP. Must be like XXX.XXX.XXX.XXX (0 <= XXX <= 255)";
+                        return;
+                    }
+                    manager.networkAddress = IpField.text;
+                    manager.StartClient();
                 }
-                manager.networkAddress = IpField.text;
-                manager.StartClient();
             }
         }
 
@@ -144,6 +158,8 @@ public class LobbyMenu : NetworkManager
 
 
 
+    [SerializeField] private NetworkDiscovery networkDiscovery;
+
     [SerializeField] private TMP_InputField IpField;
     [SerializeField] private TextMeshProUGUI InvalidIpText;
 
@@ -164,6 +180,58 @@ public class LobbyMenu : NetworkManager
                 return false;
         }
         return true;
+    }
+
+
+
+    private enum GameType { Local, LAN, WAN }
+
+    [SerializeField] private List<Button> ToDisableOnLocalButtons, ToDisableOnTeamsGame;
+    [SerializeField, Scene, FormerlySerializedAs("OfflineScene")] private string LocalScene;
+
+    private GameType gameType;
+
+    public void OnGameTypeValueChanged(int value) {
+        switch (value) {
+            case 0: //Local
+                foreach (Button b in ToDisableOnLocalButtons)
+                    b.interactable = false;
+                IpField.interactable = false;
+                gameType = GameType.Local;
+                break;
+            case 1: //LAN
+                foreach (Button b in ToDisableOnLocalButtons)
+                    b.interactable = true;
+                IpField.interactable = false;
+                gameType = GameType.LAN;
+                break;
+            case 2: //WAN
+                foreach (Button b in ToDisableOnLocalButtons)
+                    b.interactable = true;
+                IpField.interactable = true;
+                gameType = GameType.WAN;
+                break;
+        }
+    }
+
+    public void OnTeamsGameValueChanged(int value) {
+        foreach (Button b in ToDisableOnTeamsGame)
+            b.interactable = value == 0;
+        if (value == 1)
+            ColorChanged(Color.red);
+        PlayerPrefs.SetInt("IsTeamsGame", value);
+    }
+
+
+    public void FindServers() {
+        Debug.Log(gameType);
+        if (gameType == GameType.LAN)
+            networkDiscovery.StartDiscovery();
+        else
+            JoinGame();
+    }
+    public void OnServerFound(ServerResponse resp) {
+        JoinGame();
     }
 
 }

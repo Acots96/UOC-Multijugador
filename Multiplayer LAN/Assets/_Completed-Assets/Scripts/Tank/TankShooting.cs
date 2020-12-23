@@ -132,26 +132,20 @@ namespace Complete
 
         private bool GetKeyStateButtonDown()
         {
-
             //En caso de presionar alguno de los botones de disparo
             return fireControl.wasPressedThisFrame || fastFireControl.wasPressedThisFrame || bombFireControl.wasPressedThisFrame;
-
         }
 
         private bool GetKeyStateButton()
         {
-
             //En caso de dejar sostenido alguno de los botones de disparo
             return fireControl.isPressed || fastFireControl.isPressed || bombFireControl.isPressed;
-
         }
 
         private bool GetKeyStateButtonUp()
         {
-
             //En caso de soltar alguno de los botones de disparo
             return fireControl.wasReleasedThisFrame || fastFireControl.wasReleasedThisFrame || bombFireControl.wasReleasedThisFrame;
-
         }
 
         [Client]
@@ -164,13 +158,12 @@ namespace Complete
             {
                 // Set the fired flag so only Fire is only called once.
                 m_Fired = true;
-                CmdFire(shootType, m_CurrentLaunchForce); // Método para la creación del proyectil en el servidor
-
+                CmdFire(shootType, m_CurrentLaunchForce, tag); // Método para la creación del proyectil en el servidor
             }
         }
 
         [Command]
-        private void CmdFire(int shootType, float currentLaunchForce)
+        private void CmdFire(int shootType, float currentLaunchForce, string tg)
         {
             //Debug.Log("Command Call");
             GameObject shell =  new GameObject();
@@ -185,18 +178,17 @@ namespace Complete
                     velFactor = 1.0f;
                     break;
                 case 1:
-
                     //spawn para el proyectil rápido
                     shell = Instantiate(m_AltShellGO, m_FireTransform.position, m_FireTransform.rotation);
                     velFactor = 1.5f;
                     break;
                 case 2:
-
                     //spawn para la bomba
                     shell = Instantiate(m_BombGO, m_FireTransform.position, m_FireTransform.rotation);
                     velFactor = 0.5f;
                     break;
             }
+            //shell.tag = tag;
 
             //Condicional para asegurarnos que el rigid body tenga información
             if (shell.GetComponent<Rigidbody>() != null)
@@ -209,7 +201,7 @@ namespace Complete
 
                 // Set the shell's velocity to the launch force in the fire position's forward direction
                 shellInstance.velocity = currentLaunchForce * m_FireTransform.forward * velFactor;
-                RpcFire(shell, shellInstance.velocity);
+                RpcFire(shell, shellInstance.velocity, tg);
 
                 // Change the clip to the firing clip and play it
                 m_ShootingAudio.clip = m_FireClip;
@@ -221,9 +213,10 @@ namespace Complete
         }
 
         [ClientRpc] 
-        private void RpcFire(GameObject go, Vector3 vel)
+        private void RpcFire(GameObject go, Vector3 vel, string tg)
         {
-                go.GetComponent<Rigidbody>().velocity = vel;
+            go.GetComponent<Rigidbody>().velocity = vel;
+            go.tag = tg;
         }
     }
 } 

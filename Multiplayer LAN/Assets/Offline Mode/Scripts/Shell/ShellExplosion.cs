@@ -45,6 +45,12 @@ namespace Offline
                 if (!targetHealth)
                     continue;
 
+                // If has a team tag (Blue/Red) and both the shell and the TankHealth have the same tag
+                // then is fire friendly, so no damage.
+                if (tag.Equals("Blue") || tag.Equals("Red"))
+                    if (targetHealth.CompareTag(tag))
+                        continue;
+
                 // Calculate the amount of damage the target should take based on it's distance from the shell.
                 float damage = CalculateDamage (targetRigidbody.position);
 
