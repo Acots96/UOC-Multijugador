@@ -333,7 +333,6 @@ namespace Complete
             {
                 if (isServer)
                 {
-                    //m_RoundWinner.m_Wins++;
                     if (isLocalPlayer)
                     {
                         RpcIncreaseWinsNumber(m_RoundWinner);
@@ -341,9 +340,7 @@ namespace Complete
                     else
                     {
                         IncreaseWinsNumber(m_RoundWinner);
-                        
                     }
-                    //m_RoundWinner.GetComponent<TankHealth>().RpcRandomPos();
                 }
             }
 
@@ -461,14 +458,10 @@ namespace Complete
 
             foreach (Transform playerTank in TotalPlayersInGame)
             {
-               // if (isServer)
-                    playerTank.GetComponent<TankHealth>().RpcRandomPos();
-
-
+                playerTank.GetComponent<TankHealth>().RpcRandomPos();
                 if (!playerTank.gameObject.activeSelf)
                 {
-                  //  if (isServer)
-                        RpcToggleTank(playerTank, true);
+                    RpcToggleTank(playerTank, true);
 
                 }
             }

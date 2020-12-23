@@ -79,10 +79,11 @@ namespace Complete
             {
                 return;
             }
-
-            // Reduce current health by the amount of damage done
-            m_CurrentHealth -= amount;
-
+            if (GameManager.GetOnRound())  //Flag para desactivar el daño mientras no este durante la ronda
+            {
+                // Reduce current health by the amount of damage done
+                m_CurrentHealth -= amount;
+            }
             // Change the UI elements appropriately
             SetHealthUI();
 
@@ -138,33 +139,18 @@ namespace Complete
 
             m_CurrentHealth = m_StartingHealth;
 
-            // Turn the tank off
-            //gameObject.SetActive(false);
-            //CmdChangeStatusofTank(transform, false);
             RpcRespawn();
             m_Dead = false;
-/*            if(isServer)
-                if(!isLocalPlayer)
-                    GameManager.TogglePlayerTank(transform, false);*/
-            // CmdChangeStatusofTank(transform, false);
-            //gameObject.SetActive(true);
+
         } 
 
         [Command]
         void CmdChangeStatusofTank(Transform player, bool status)
         {
             GameManager.TogglePlayerTank(player, status);
-            //RpcRandomPos();
         }
 
         
-/*        public void RandomPos()
-        {
-            Vector3 spawnPoint = GetPlayerSpawnPoint();
-            transform.position = spawnPoint;
-        }*/
-
-
         [ClientRpc]
         public void RpcRandomPos()
         {
@@ -175,30 +161,10 @@ namespace Complete
         [ClientRpc]
         void RpcRespawn()
         {
-            //gameObject.GetComponent<Rigidbody>().velocity = Vector3.zero;
-            //Vector3 spawnPoint = GetPlayerSpawnPoint();
-            //transform.position = spawnPoint;
-            //CmdChangeStatusofTank(transform, false);
-
-            if (isServer)
+            if (isLocalPlayer)
             {
-                if (isLocalPlayer)
-                {
-                    CmdChangeStatusofTank(transform, false);
-                }
-                else
-                {
-                    GameManager.TogglePlayerTank(transform, false);
-                }
+                CmdChangeStatusofTank(transform, false);
             }
-            else
-            {
-                if (isLocalPlayer)
-                {
-                    CmdChangeStatusofTank(transform, false);
-                }
-            }
-
         }
     }
 }
