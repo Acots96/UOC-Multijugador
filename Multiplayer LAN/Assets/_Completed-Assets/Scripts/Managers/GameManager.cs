@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using Mirror;
+using System.Linq;
 
 namespace Complete
 {
@@ -35,6 +36,11 @@ namespace Complete
 
         [SyncVar] public bool InRound = false;    // Variable sincronizada para saber si estamos en medio de una ronda
 
+        public static bool IsTeamsGame { get; private set; }
+        public GameObject TeamsMenu;
+        public Text TeamsText;
+        public enum GameTeam { NoTeam, Blue, Red }
+        private int m_BlueWins, m_RedWins;
 
 
         private void Awake() {
@@ -46,6 +52,10 @@ namespace Complete
 
             npcsTanks = new List<Transform>();
             playersTanks = new List<Transform>();
+
+            if (PlayerPrefs.GetInt("IsTeamsGame") == 1) {
+                IsTeamsGame = true;
+            }
         }
 
         private void Start()
@@ -97,7 +107,6 @@ namespace Complete
             {                
                 Instance.ToggleTank(player, status);
             }
-
         }
 
         private static void AddPlayer(Transform player) {
@@ -365,15 +374,30 @@ namespace Complete
             // Skip all rounds logic
 
             // Start the count of tanks left at zero.
-            int numTanksLeft = 0;
-
-            foreach (Transform playerTank in playersTanks)
-            {
-                numTanksLeft++;
+            if (!IsTeamsGame) {
+                int numTanksLeft = 0;
+                foreach (Transform playerTank in playersTanks) {
+                    numTanksLeft++;
+                }
+                // If there are one or fewer tanks remaining return true, otherwise return false.
+                return numTanksLeft >= 2;
+            } else {
+                int blues = 0, reds = 0;
+                foreach (Transform tr in playersTanks) {
+                    if (tr.GetComponent<TankController>().IsBlueTeam)
+                        blues++;
+                    else
+                        reds++;
+                }
+                if (blues == 2 && reds == 2) {
+                    GameObject[] btns = GameObject.FindGameObjectsWithTag("PlayerColorButton");
+                    foreach (GameObject btn in btns)
+                        btn.GetComponent<Button>().interactable = false;
+                    TeamsMenu.SetActive(false);
+                    return true;
+                }
+                return false;
             }
-
-            // If there are one or fewer tanks remaining return true, otherwise return false.
-            return numTanksLeft >= 2;
         }
 
 
@@ -382,15 +406,36 @@ namespace Complete
         {
             // Skip all rounds logic
 
-           // Start the count of tanks left at zero.
-            int numTanksLeft = 0;
-
-            foreach (Transform playerTank in playersTanks)
-            {
-                numTanksLeft++;
+            if (!IsTeamsGame) {
+                // Start the count of tanks left at zero.
+                int numTanksLeft = 0;
+                // Go through all the tanks...
+                for (int i = 0; i < m_Tanks.Length; i++) {
+                    // ... and if they are active, increment the counter.
+                    if (m_Tanks[i].m_Instance.activeSelf)
+                        numTanksLeft++;
+                }
+                // If there are one or fewer tanks remaining return true, otherwise return false.
+                return numTanksLeft <= 1;
+            } else {
+                bool blue = false, red = false;
+                // Go through all the tanks to see if there only remains one team
+                for (int i = 0; i < 4; i++) {
+                    if (playersTanks[i].gameObject.activeSelf) {
+                        TankController t = playersTanks[i].GetComponent<TankController>();
+                        blue |= t.IsBlueTeam;
+                        red |= !t.IsBlueTeam;
+                    }
+                }
+                if (blue ^ red) {
+                    if (blue)
+                        m_BlueWins++;
+                    else
+                        m_RedWins++;
+                    return true;
+                }
+                return false;
             }
-
-            return numTanksLeft <= 1; 
         }
 
         //Ajuste para almacenar el ganador de la ronda
@@ -433,25 +478,44 @@ namespace Complete
             string message = "DRAW!";
 
             // If there is a winner then change the message to reflect that
-            if (m_RoundWinner != null)
-                message = m_RoundWinner.GetComponent<TankNaming>().currentName + " WINS THE ROUND!";
+            if (m_RoundWinner != null) {
+                if (!IsTeamsGame) {
+                    message = m_RoundWinner.GetComponent<TankNaming>().currentName + " WINS THE ROUND!";
+                } else {
+                    string colored = "";
+                    if (m_RoundWinner.IsBlueTeam)
+                        colored = "<color=#0000FF>BLUE</color>";
+                    else
+                        colored = "<color=#FF0000>RED</color>";
+                    message = "TEAM " + colored + " WINS THE ROUND!";
+                }
+            }
 
             // Add some line breaks after the initial message
             message += "\n\n\n\n";
 
             // Go through all the tanks and add each of their scores to the message
-            foreach (Transform playerTank in TotalPlayersInGame)
-            {
-                message += playerTank.GetComponent<TankNaming>().currentName + ": " + playerTank.GetComponent<TankController>().m_Wins + " WINS\n";
+            if (!IsTeamsGame) {
+                foreach (Transform playerTank in TotalPlayersInGame) {
+                    message += playerTank.GetComponent<TankNaming>().currentName + ": " + playerTank.GetComponent<TankController>().m_Wins + " WINS\n";
+                }
+            } else {
+                message += "<color=#" + ColorUtility.ToHtmlStringRGB(Color.blue) + ">BLUE</color>: " + m_BlueWins + " WINS\n";
+                message += "<color=#" + ColorUtility.ToHtmlStringRGB(Color.red) + ">RED</color>: " + m_RedWins + " WINS\n";
             }
 
             // If there is a game winner, change the entire message to reflect that
-            if (m_GameWinner != null)
-            {
-                message = m_GameWinner.GetComponent<TankNaming>().currentName + " WINS THE GAME!";
-                NetworkIdentity playerIdentity = m_GameWinner.GetComponent<NetworkIdentity>();
-                UpdatePlayerStats(playerIdentity.connectionToClient);
+            if (m_GameWinner != null) {
+                if (!IsTeamsGame) {
+                    message = m_GameWinner.GetComponent<TankNaming>().currentName + " WINS THE GAME!";
+                    NetworkIdentity playerIdentity = m_GameWinner.GetComponent<NetworkIdentity>();
+                    UpdatePlayerStats(playerIdentity.connectionToClient);
+                } else {
+                    TankManager tm = m_Tanks.First((tank) => tank.m_Instance.GetComponent<TankController>().Equals(m_RoundWinner));
+                    message = "TEAM " + tm.m_ColoredPlayerText + " WINS THE GAME!";
+                }
             }
+
             return message;
         }
 
@@ -491,5 +555,23 @@ namespace Complete
             Instance.InRound = false;
 
         }
+
+
+
+
+        public static void UpdateTeamsText() {
+            int blues = 0, reds = 0;
+            foreach (Transform tr in Instance.playersTanks) {
+                TankController c = tr.GetComponent<TankController>();
+                if (c.IsBlueTeam)
+                    blues++;
+                else
+                    reds++;
+            }
+            Instance.TeamsText.text = "<color=#0000FF>Team blue: " + blues + "/2</color>";
+            Instance.TeamsText.text += "\n";
+            Instance.TeamsText.text += "<color=#FF0000>Team red: " + reds + "/2</color>";
+        }
+
     }
 }

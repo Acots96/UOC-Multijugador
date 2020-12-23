@@ -22,7 +22,7 @@ public class LobbyMenu : NetworkManager
     {
         manager = FindObjectOfType<NetworkManager>();
         AwakeColorsButtons();
-        gameType = GameType.WAN;
+        OnGameTypeValueChanged(2);
         OnTeamsGameValueChanged(0);
     }
 
@@ -215,11 +215,16 @@ public class LobbyMenu : NetworkManager
     }
 
     public void OnTeamsGameValueChanged(int value) {
+        foreach (Button b in ToDisableOnTeamsGame)
+            b.interactable = value == 0;
+        if (value == 1)
+            ColorChanged(Color.red);
         PlayerPrefs.SetInt("IsTeamsGame", value);
     }
 
 
     public void FindServers() {
+        Debug.Log(gameType);
         if (gameType == GameType.LAN)
             networkDiscovery.StartDiscovery();
         else
