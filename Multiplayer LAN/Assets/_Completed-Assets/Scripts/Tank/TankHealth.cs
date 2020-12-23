@@ -157,6 +157,14 @@ namespace Complete
             //RpcRandomPos();
         }
 
+        
+/*        public void RandomPos()
+        {
+            Vector3 spawnPoint = GetPlayerSpawnPoint();
+            transform.position = spawnPoint;
+        }*/
+
+
         [ClientRpc]
         public void RpcRandomPos()
         {

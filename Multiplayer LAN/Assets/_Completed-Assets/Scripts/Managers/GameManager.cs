@@ -234,6 +234,7 @@ namespace Complete
             // As soon as the round starts reset the tanks and make sure they can't move
             if (isServer)
                 ResetAllTanks();
+
             DisableTankControl();
 
             // Snap the camera's zoom and position to something appropriate for the reset tanks
@@ -342,7 +343,7 @@ namespace Complete
                         IncreaseWinsNumber(m_RoundWinner);
                         
                     }
-                    m_RoundWinner.GetComponent<TankHealth>().RpcRandomPos();
+                    //m_RoundWinner.GetComponent<TankHealth>().RpcRandomPos();
                 }
             }
 
@@ -460,19 +461,16 @@ namespace Complete
 
             foreach (Transform playerTank in TotalPlayersInGame)
             {
+               // if (isServer)
+                    playerTank.GetComponent<TankHealth>().RpcRandomPos();
+
+
                 if (!playerTank.gameObject.activeSelf)
                 {
-                    if (isServer)
-                    {
-                        TogglePlayerTank(playerTank, true);
-                    }
-                    else
-                    {
+                  //  if (isServer)
                         RpcToggleTank(playerTank, true);
-                    }
 
                 }
-
             }
         }
 
