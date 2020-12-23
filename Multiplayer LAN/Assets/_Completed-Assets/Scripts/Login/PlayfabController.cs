@@ -186,4 +186,49 @@ public class PlayfabController : MonoBehaviour
     {
         PerformUpdateDisplayName(displayName);
     }
+
+    public GameObject Leaderboard;
+    public GameObject LeaderboardItemPrefab;
+    public Transform LeaderboardContainer;
+
+    #region Leaderboard
+    public void GetLeaderboard()
+    {
+        var requestLeaderBoard = new GetLeaderboardRequest { StartPosition = 0, StatisticName = "PlayerHighScore", MaxResultsCount = 10 };
+        PlayFabClientAPI.GetLeaderboard(requestLeaderBoard, OnGetLeaderboard, OnErrorLeaderboard);
+    }
+
+    void OnGetLeaderboard(GetLeaderboardResult result)
+    {
+        Leaderboard.SetActive(true);
+        if (result.Leaderboard.Count >= 1)
+        {
+            //Debug.Log(result.Leaderboard[0].StatValue);
+            foreach (PlayerLeaderboardEntry player in result.Leaderboard)
+            {
+                GameObject leaderboardItem = Instantiate(LeaderboardItemPrefab, LeaderboardContainer);
+                LeaderboardManager item = leaderboardItem.GetComponent<LeaderboardManager>();
+
+                item.PlayerNameText.text = player.DisplayName;
+                item.PlayerScoreText.text = player.StatValue.ToString();
+                Debug.Log(player.DisplayName + ": " + player.StatValue);
+            }
+        }
+    }
+
+    public void CloseLeaderboard()
+    {
+        Leaderboard.SetActive(false);
+        for(int i = LeaderboardContainer.childCount -1; i>=0; i--)
+        {
+            Destroy(LeaderboardContainer.GetChild(i).gameObject);
+        }
+    }
+
+    void OnErrorLeaderboard(PlayFabError error)
+    {
+        Debug.LogError(error.GenerateErrorReport());
+    }
+
+    #endregion
 }
