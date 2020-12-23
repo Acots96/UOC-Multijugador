@@ -447,10 +447,20 @@ namespace Complete
 
             // If there is a game winner, change the entire message to reflect that
             if (m_GameWinner != null)
+            {
                 message = m_GameWinner.GetComponent<TankNaming>().currentName + " WINS THE GAME!";
-
+                NetworkIdentity playerIdentity = m_GameWinner.GetComponent<NetworkIdentity>();
+                UpdatePlayerStats(playerIdentity.connectionToClient);
+            }
             return message;
         }
+
+        [TargetRpc]
+        void UpdatePlayerStats(NetworkConnection target)
+        {
+            PlayfabController._instance.SetStats();
+        }
+
 
         //Reactiva los objetos de los tanques jugadores que se han unido a la partida
         private void ResetAllTanks()

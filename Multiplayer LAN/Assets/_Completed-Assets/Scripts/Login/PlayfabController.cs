@@ -138,6 +138,7 @@ public class PlayfabController : MonoBehaviour
      
     private static void GoToLobby()
     {
+        _instance.GetStatistics();
         SceneManager.LoadScene("Lobby");
     }
     
@@ -186,6 +187,45 @@ public class PlayfabController : MonoBehaviour
     {
         PerformUpdateDisplayName(displayName);
     }
+
+    public int PlayerScore=0;
+
+    #region Stats
+    public void SetStats()
+    {
+        PlayFabClientAPI.UpdatePlayerStatistics(new UpdatePlayerStatisticsRequest
+        {
+            // request.Statistics is a list, so multiple StatisticUpdate objects can be defined if required.
+            Statistics = new List<StatisticUpdate> {
+            new StatisticUpdate { StatisticName = "PlayerHighScore", Value = PlayerScore + 100 },
+            }
+        },
+        result => { Debug.Log("User statistics updated"); },
+        error => { Debug.LogError(error.GenerateErrorReport()); });
+    }
+
+    void GetStatistics()
+    {
+        PlayFabClientAPI.GetPlayerStatistics(
+            new GetPlayerStatisticsRequest(),
+            OnGetStatistics,
+            error => Debug.LogError(error.GenerateErrorReport())
+        );
+    }
+
+    void OnGetStatistics(GetPlayerStatisticsResult result)
+    {
+        Debug.Log("Received the following Statistics:");
+        foreach (var eachStat in result.Statistics)
+        {
+            Debug.Log("Statistic (" + eachStat.StatisticName + "): " + eachStat.Value);
+            if(eachStat.StatisticName == "PlayerHighScore")
+            {
+                PlayerScore = eachStat.Value;
+            }
+        }
+    }
+    #endregion
 
     public GameObject Leaderboard;
     public GameObject LeaderboardItemPrefab;
