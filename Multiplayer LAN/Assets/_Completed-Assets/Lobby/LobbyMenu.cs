@@ -23,6 +23,7 @@ public class LobbyMenu : NetworkManager
         manager = FindObjectOfType<NetworkManager>();
         AwakeColorsButtons();
         gameType = GameType.WAN;
+        OnTeamsGameValueChanged(0);
     }
 
     public void RunServer()
@@ -185,12 +186,12 @@ public class LobbyMenu : NetworkManager
 
     private enum GameType { Local, LAN, WAN }
 
-    [SerializeField] private List<Button> ToDisableOnLocalButtons;
+    [SerializeField] private List<Button> ToDisableOnLocalButtons, ToDisableOnTeamsGame;
     [SerializeField, Scene, FormerlySerializedAs("OfflineScene")] private string LocalScene;
 
     private GameType gameType;
 
-    public void OnDropdownValueChanged(int value) {
+    public void OnGameTypeValueChanged(int value) {
         switch (value) {
             case 0: //Local
                 foreach (Button b in ToDisableOnLocalButtons)
@@ -211,6 +212,10 @@ public class LobbyMenu : NetworkManager
                 gameType = GameType.WAN;
                 break;
         }
+    }
+
+    public void OnTeamsGameValueChanged(int value) {
+        PlayerPrefs.SetInt("IsTeamsGame", value);
     }
 
 

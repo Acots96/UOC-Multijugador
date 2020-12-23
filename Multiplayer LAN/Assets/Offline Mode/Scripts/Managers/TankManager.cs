@@ -25,35 +25,52 @@ namespace Offline
 
         private TankMovement m_Movement;                        // Reference to tank's movement script, used to disable and enable control.
         private TankShooting m_Shooting;                        // Reference to tank's shooting script, used to disable and enable control.
+        private TankHealth m_Health;
         private GameObject m_CanvasGameObject;                  // Used to disable the world space UI during the Starting and Ending phases of each round.
 
         private MultiplayerEventSystem m_MultiPEventSys;
         private PlayerInput m_PlayerInput;
         private GameManager m_GameManager;
 
+        public GameManager.GameTeam Team { get; private set; }
 
-        public void Setup ()
+
+        public void Setup (GameManager.GameTeam team)
         {
             // Get references to the components.
-            m_Movement = m_Instance.GetComponent<TankMovement> ();
-            m_Shooting = m_Instance.GetComponent<TankShooting> ();
+            m_Movement = m_Instance.GetComponent<TankMovement>();
+            m_Shooting = m_Instance.GetComponent<TankShooting>();
+            m_Health = m_Instance.GetComponent<TankHealth>();
             m_CanvasGameObject = m_Instance.GetComponentInChildren<Canvas> ().gameObject;
 
             // Set the player numbers to be consistent across the scripts.
             m_Movement.m_PlayerNumber = m_PlayerNumber;
             m_Shooting.m_PlayerNumber = m_PlayerNumber;
 
-            // Create a string using the correct color that says 'PLAYER 1' etc based on the tank's color and the player's number.
-            m_ColoredPlayerText = "<color=#" + ColorUtility.ToHtmlStringRGB(m_PlayerColor) + ">PLAYER " + m_PlayerNumber + "</color>";
-
             // Get all of the renderers of the tank.
-            MeshRenderer[] renderers = m_Instance.GetComponentsInChildren<MeshRenderer> ();
+            MeshRenderer[] renderers = m_Instance.GetComponentsInChildren<MeshRenderer>();
 
-            // Go through all the renderers...
-            for (int i = 0; i < renderers.Length; i++)
-            {
-                // ... set their material color to the color specific to this tank.
-                renderers[i].material.color = m_PlayerColor;
+            // Team
+            Team = team;
+            if (Team == GameManager.GameTeam.NoTeam) {
+                // Create a string using the correct color that says 'PLAYER 1' etc based on the tank's color and the player's number.
+                m_ColoredPlayerText = "<color=#" + ColorUtility.ToHtmlStringRGB(m_PlayerColor) + ">PLAYER " + m_PlayerNumber + "</color>";
+
+                // Go through all the renderers...
+                for (int i = 0; i < renderers.Length; i++) {
+                    // ... set their material color to the color specific to this tank.
+                    renderers[i].material.color = m_PlayerColor;
+                }
+            } else {
+                m_PlayerColor = Team == GameManager.GameTeam.Blue ? Color.blue : Color.red;
+                string t = Team == GameManager.GameTeam.Blue ? "BLUE" : "RED";
+                m_Instance.tag = Team == GameManager.GameTeam.Blue ? "Blue" : "Red";
+                m_ColoredPlayerText = "<color=#" + ColorUtility.ToHtmlStringRGB(m_PlayerColor) + ">"+t+"</color>";
+                // Go through all the renderers...
+                for (int i = 0; i < renderers.Length; i++) {
+                    // ... set their material color to the color specific to this tank.
+                    renderers[i].material.color = m_PlayerColor;
+                }
             }
 
             // Gets components for setting new Input System

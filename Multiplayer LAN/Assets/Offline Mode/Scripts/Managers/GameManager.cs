@@ -40,6 +40,12 @@ namespace Offline
 
         public bool[] m_SpawnPointsInUse;
 
+        //
+        public GameObject m_StartGamePopup, m_StartGamePopupTeams;
+        private bool isTeamsGame;
+        public enum GameTeam { NoTeam, Blue, Red }
+        private int m_BlueWins, m_RedWins;
+
         private void Start()
         {
             // Create the delays so they only have to be made once.
@@ -52,6 +58,14 @@ namespace Offline
             m_CameraControl.OnTurnOnSplitScreen += TurnOnTankCamerasAndRefreshSplitScreen;
 
             m_SpawnPointsInUse = Enumerable.Repeat(false, m_AvailableSpawnPoints.Length).ToArray();
+
+            //
+            if (PlayerPrefs.GetInt("IsTeamsGame") == 1) {
+                isTeamsGame = true;
+                m_StartGamePopup.SetActive(false);
+                m_StartGamePopupTeams.SetActive(true);
+                m_UiButtonManager.mainMenuGO = m_StartGamePopupTeams;
+            }
         }
 
         // When CameraControl invokes the method, it enables tank cameras and makes a refresh of
@@ -75,11 +89,11 @@ namespace Offline
         }
 
         // UiButtonManager triggers this event with the number of players as parameter
-        private void StartGameMethod(int playerNum)
+        private void StartGameMethod(int playerNum, List<bool> playersAreBlue)
         {
             m_ActualPlayersNum = playerNum;
 
-            SpawnAllTanks();
+            SpawnAllTanks(playersAreBlue);
             SetCameraTargets();
 
             m_CameraControl.SetActualTargetNumber(playerNum);
@@ -247,7 +261,7 @@ namespace Offline
 
         // Spawns tanks in the begining of the game depending on the number
         // of players selected
-        private void SpawnAllTanks()
+        private void SpawnAllTanks(List<bool> playersAreBlue)
         {
             m_MainCamera = Camera.main.GetComponent<Camera>();
 
@@ -271,7 +285,13 @@ namespace Offline
                     // Instantiate(m_MultiplayerEventSystemPrefab, m_Tanks[i].m_SpawnPoint.position, m_Tanks[i].m_SpawnPoint.rotation) as GameObject;
                     Instantiate(m_MultiplayerEventSystemPrefab, spawnPointPosition, spawnPointRotation) as GameObject;
                 m_Tanks[i].m_PlayerNumber = i + 1;
-                m_Tanks[i].Setup();
+
+                if (isTeamsGame) {
+                    m_Tanks[i].Setup(playersAreBlue[i] ? GameTeam.Blue : GameTeam.Red);
+                } else {
+                    m_Tanks[i].Setup(GameTeam.NoTeam);
+                }
+
                 AddCamera(i, m_MainCamera);
             }
         }
@@ -314,7 +334,7 @@ namespace Offline
                 // Instantiate(m_MultiplayerEventSystemPrefab, m_Tanks[i].m_SpawnPoint.position, m_Tanks[i].m_SpawnPoint.rotation) as GameObject;
                 Instantiate(m_MultiplayerEventSystemPrefab, spawnPointPosition, spawnPointRotation) as GameObject;
             m_Tanks[i].m_PlayerNumber = i + 1;
-            m_Tanks[i].Setup();
+            m_Tanks[i].Setup(GameTeam.NoTeam);
             AddCamera(i, m_MainCamera);
 
             // updates transform array in cameraControl with the player transforms
@@ -460,19 +480,35 @@ namespace Offline
         // This is used to check if there is one or fewer tanks remaining and thus the round should end.
         private bool OneTankLeft()
         {
-            // Start the count of tanks left at zero.
-            int numTanksLeft = 0;
-
-            // Go through all the tanks...
-            for (int i = 0; i < m_ActualPlayersNum; i++)
-            {
-                // ... and if they are active, increment the counter.
-                if (m_Tanks[i].m_Instance.activeSelf)
-                    numTanksLeft++;
+            if (!isTeamsGame) {
+                // Start the count of tanks left at zero.
+                int numTanksLeft = 0;
+                // Go through all the tanks...
+                for (int i = 0; i < m_ActualPlayersNum; i++) {
+                    // ... and if they are active, increment the counter.
+                    if (m_Tanks[i].m_Instance.activeSelf)
+                        numTanksLeft++;
+                }
+                // If there are one or fewer tanks remaining return true, otherwise return false.
+                return numTanksLeft <= 1;
+            } else {
+                bool blue = false, red = false;
+                // Go through all the tanks to see if there only remains one team
+                for (int i = 0; i < m_ActualPlayersNum; i++) {
+                    if (m_Tanks[i].m_Instance.activeSelf) {
+                        blue |= m_Tanks[i].Team == GameTeam.Blue;
+                        red |= m_Tanks[i].Team == GameTeam.Red;
+                    }
+                }
+                if (blue ^ red) {
+                    if (blue)
+                        m_BlueWins++;
+                    else
+                        m_RedWins++;
+                    return true;
+                }
+                return false;
             }
-
-            // If there are one or fewer tanks remaining return true, otherwise return false.
-            return numTanksLeft <= 1;
         }
         
         
@@ -516,21 +552,33 @@ namespace Offline
             string message = "DRAW!";
 
             // If there is a winner then change the message to reflect that.
-            if (m_RoundWinner != null)
-                message = m_RoundWinner.m_ColoredPlayerText + " WINS THE ROUND!";
+            if (m_RoundWinner != null) {
+                if (!isTeamsGame)
+                    message = m_RoundWinner.m_ColoredPlayerText + " WINS THE ROUND!";
+                else
+                    message = "TEAM " + m_RoundWinner.m_ColoredPlayerText + " WINS THE ROUND!";
+            }
 
             // Add some line breaks after the initial message.
             message += "\n\n\n\n";
 
             // Go through all the tanks and add each of their scores to the message.
-            for (int i = 0; i < m_ActualPlayersNum; i++)
-            {
-                message += m_Tanks[i].m_ColoredPlayerText + ": " + m_Tanks[i].m_Wins + " WINS\n";
+            if (!isTeamsGame) {
+                for (int i = 0; i < m_ActualPlayersNum; i++) {
+                    message += m_Tanks[i].m_ColoredPlayerText + ": " + m_Tanks[i].m_Wins + " WINS\n";
+                }
+            } else {
+                message += "<color=#" + ColorUtility.ToHtmlStringRGB(Color.blue) + ">BLUE</color>: " + m_BlueWins + " WINS\n";
+                message += "<color=#" + ColorUtility.ToHtmlStringRGB(Color.red) + ">RED</color>: " + m_RedWins + " WINS\n";
             }
 
             // If there is a game winner, change the entire message to reflect that.
-            if (m_GameWinner != null)
-                message = m_GameWinner.m_ColoredPlayerText + " WINS THE GAME!";
+            if (m_GameWinner != null) {
+                if (!isTeamsGame)
+                    message = m_GameWinner.m_ColoredPlayerText + " WINS THE GAME!";
+                else
+                    message = "TEAM " + m_GameWinner.m_ColoredPlayerText + " WINS THE GAME!";
+            }
 
             return message;
         }
