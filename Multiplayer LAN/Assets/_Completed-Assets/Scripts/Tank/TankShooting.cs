@@ -32,6 +32,9 @@ namespace Complete
         public GameObject m_AltShellGO;
         public GameObject m_BombGO;
 
+        [SyncVar] public bool AllowBomb = false;
+        [SyncVar] public bool AllowRapidFire = false;
+
         private void OnEnable()
         {
             // When the tank is turned on, reset the launch force and the UI
