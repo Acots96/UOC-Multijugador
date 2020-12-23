@@ -46,6 +46,20 @@ public class TankController : NetworkBehaviour {
         Complete.GameManager.TogglePlayerTank(player, status);
     }
 
+    [Client]
+    private void OnTriggerEnter(Collider other)
+    {
+        if(other.CompareTag("PowerUp"))
+        {
+            CmdDestroyPowerUp(other.gameObject);
+        }
+    }
+
+    [Command]
+    void CmdDestroyPowerUp(GameObject powerUp)
+    {
+        Destroy(powerUp);
+    }
 
     //Coloring
 
