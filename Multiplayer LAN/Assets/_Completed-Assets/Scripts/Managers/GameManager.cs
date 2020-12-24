@@ -418,10 +418,8 @@ namespace Complete
             if (!IsTeamsGame) {
                 // Start the count of tanks left at zero.
                 int numTanksLeft = 0;
-                // Go through all the tanks...
-                for (int i = 0; i < m_Tanks.Length; i++) {
-                    // ... and if they are active, increment the counter.
-                    if (m_Tanks[i].m_Instance.activeSelf)
+                foreach (Transform playerTank in playersTanks) {
+                    if (playerTank.gameObject.activeSelf)
                         numTanksLeft++;
                 }
                 // If there are one or fewer tanks remaining return true, otherwise return false.
