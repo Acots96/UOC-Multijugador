@@ -55,6 +55,7 @@ namespace Complete
 
             if (PlayerPrefs.GetInt("IsTeamsGame") == 1) {
                 IsTeamsGame = true;
+                TeamsMenu.SetActive(true);
             }
         }
 
@@ -116,10 +117,14 @@ namespace Complete
                 if (!Instance.TotalPlayersInGame.Contains(player))
                     Instance.TotalPlayersInGame.Add(player);
             }
+            if (IsTeamsGame)
+                UpdateTeamsText();
         }
         private static void RemovePlayer(Transform player) {
             if (Instance.playersTanks.Contains(player))
                 Instance.playersTanks.Remove(player);
+            if (IsTeamsGame)
+                UpdateTeamsText();
         }
         private static void AddEnemy(Transform enemy) {
             if (!Instance.npcsTanks.Contains(enemy))
@@ -383,12 +388,16 @@ namespace Complete
                 return numTanksLeft >= 2;
             } else {
                 int blues = 0, reds = 0;
+                playersTanks.RemoveAll(tank => tank == null);
                 foreach (Transform tr in playersTanks) {
+                    if (tr == null)
+                        continue;
                     if (tr.GetComponent<TankController>().IsBlueTeam)
                         blues++;
                     else
                         reds++;
                 }
+                UpdateTeamsText();
                 if (blues == 2 && reds == 2) {
                     GameObject[] btns = GameObject.FindGameObjectsWithTag("PlayerColorButton");
                     foreach (GameObject btn in btns)
@@ -545,7 +554,6 @@ namespace Complete
         private void EnableTankControl()
         {
             Instance.InRound = true;
-
         }
 
         
@@ -553,7 +561,6 @@ namespace Complete
         private void DisableTankControl()
         {
             Instance.InRound = false;
-
         }
 
 

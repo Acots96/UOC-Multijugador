@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Mirror;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 
 public class TankController : NetworkBehaviour {
 
@@ -38,6 +39,7 @@ public class TankController : NetworkBehaviour {
     }
     private void OnDestroy()
     {
+        Debug.Log("DEAD: " + name);
         Complete.GameManager.RemoveTank(transform);
     }
 
@@ -78,6 +80,8 @@ public class TankController : NetworkBehaviour {
                     b.GetComponent<Button>().interactable = false;
                 }
             }
+            GameObject exitBtn = GameObject.FindGameObjectWithTag("TeamsExitButton");
+            exitBtn.GetComponent<Button>().onClick.AddListener(delegate { ExitTeamsGame(); });
         }
         string[] s = PlayerPrefs.GetString("SelectedColor").Split(';');
         CmdColorChanged(new Color(float.Parse(s[0]), float.Parse(s[1]), float.Parse(s[2])));
@@ -124,6 +128,12 @@ public class TankController : NetworkBehaviour {
     [Command]
     private void CmdColorChanged(Color c) {
         SyncPlayerColor(color, c);
+    }
+
+
+    public void ExitTeamsGame() {
+        NetworkServer.RemovePlayerForConnection(connectionToServer, true);
+        //SceneManager.LoadScene("Lobby");
     }
 
 }
