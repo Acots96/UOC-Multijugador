@@ -22,7 +22,7 @@ public class LobbyMenu : NetworkManager
     {
         manager = FindObjectOfType<NetworkManager>();
         AwakeColorsButtons();
-        OnGameTypeValueChanged(2);
+        OnGameTypeValueChanged(1);
         OnTeamsGameValueChanged(0);
     }
 
