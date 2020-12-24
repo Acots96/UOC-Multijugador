@@ -43,19 +43,15 @@ public class LobbyMenu : NetworkManager
 
     public void CreateGame()
     {
-        if (gameType == GameType.Local) {
-            SceneManager.LoadScene(LocalScene);
-        } else {
-            if (!NetworkClient.isConnected && !NetworkServer.active) {
-                if (!NetworkClient.active) {
-                    if (gameType == GameType.LAN)
-                        networkDiscovery.AdvertiseServer();
-                    manager.StartHost();
-                }
+        if (!NetworkClient.isConnected && !NetworkServer.active) {
+            if (!NetworkClient.active) {
+                if (gameType == GameType.LAN)
+                    networkDiscovery.AdvertiseServer();
+                manager.StartHost();
             }
-
-            AddressData();
         }
+
+        AddressData();
     }
 
     public void JoinGame()
@@ -184,30 +180,19 @@ public class LobbyMenu : NetworkManager
 
 
 
-    private enum GameType { Local, LAN, WAN }
+    private enum GameType { LAN, WAN }
 
     [SerializeField] private List<Button> ToDisableOnLocalButtons, ToDisableOnTeamsGame;
-    [SerializeField, Scene, FormerlySerializedAs("OfflineScene")] private string LocalScene;
 
     private GameType gameType;
 
     public void OnGameTypeValueChanged(int value) {
         switch (value) {
-            case 0: //Local
-                foreach (Button b in ToDisableOnLocalButtons)
-                    b.interactable = false;
-                IpField.interactable = false;
-                gameType = GameType.Local;
-                break;
-            case 1: //LAN
-                foreach (Button b in ToDisableOnLocalButtons)
-                    b.interactable = true;
+            case 0: //LAN
                 IpField.interactable = false;
                 gameType = GameType.LAN;
                 break;
-            case 2: //WAN
-                foreach (Button b in ToDisableOnLocalButtons)
-                    b.interactable = true;
+            case 1: //WAN
                 IpField.interactable = true;
                 gameType = GameType.WAN;
                 break;
