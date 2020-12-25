@@ -5,6 +5,8 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using Mirror.Discovery;
 using TMPro;
+using System.Collections.Generic;
+using UnityEngine.Serialization;
 
 public class LobbyMenu : NetworkManager
 {
@@ -20,6 +22,8 @@ public class LobbyMenu : NetworkManager
     {
         manager = FindObjectOfType<NetworkManager>();
         AwakeColorsButtons();
+        OnGameTypeValueChanged(1);
+        OnTeamsGameValueChanged(0);
     }
 
     public void RunServer()
@@ -28,6 +32,8 @@ public class LobbyMenu : NetworkManager
         {
             if (!NetworkClient.active)
             {
+                if (gameType == GameType.LAN)
+                    networkDiscovery.AdvertiseServer();
                 manager.StartServer();
             }
         }
@@ -37,10 +43,10 @@ public class LobbyMenu : NetworkManager
 
     public void CreateGame()
     {
-        if (!NetworkClient.isConnected && !NetworkServer.active)
-        {
-            if (!NetworkClient.active)
-            {
+        if (!NetworkClient.isConnected && !NetworkServer.active) {
+            if (!NetworkClient.active) {
+                if (gameType == GameType.LAN)
+                    networkDiscovery.AdvertiseServer();
                 manager.StartHost();
             }
         }
@@ -54,13 +60,17 @@ public class LobbyMenu : NetworkManager
         {
             if (!NetworkClient.active)
             {
-                //manager.networkAddress = serverIP;
-                if (!CheckValidIP()) {
-                    InvalidIpText.text = "Invalid IP. Must be like XXX.XXX.XXX.XXX (0 <= XXX <= 255)";
-                    return;
+                if (gameType == GameType.LAN) {                    
+                    manager.StartClient();
+                } else {
+                    //manager.networkAddress = serverIP;
+                    if (!CheckValidIP()) {
+                        InvalidIpText.text = "Invalid IP. Must be like XXX.XXX.XXX.XXX (0 <= XXX <= 255)";
+                        return;
+                    }
+                    manager.networkAddress = IpField.text;
+                    manager.StartClient();
                 }
-                manager.networkAddress = IpField.text;
-                manager.StartClient();
             }
         }
 
@@ -144,6 +154,8 @@ public class LobbyMenu : NetworkManager
 
 
 
+    [SerializeField] private NetworkDiscovery networkDiscovery;
+
     [SerializeField] private TMP_InputField IpField;
     [SerializeField] private TextMeshProUGUI InvalidIpText;
 
@@ -164,6 +176,47 @@ public class LobbyMenu : NetworkManager
                 return false;
         }
         return true;
+    }
+
+
+
+    private enum GameType { LAN, WAN }
+
+    [SerializeField] private List<Button> ToDisableOnLocalButtons, ToDisableOnTeamsGame;
+
+    private GameType gameType;
+
+    public void OnGameTypeValueChanged(int value) {
+        switch (value) {
+            case 0: //LAN
+                IpField.interactable = false;
+                gameType = GameType.LAN;
+                break;
+            case 1: //WAN
+                IpField.interactable = true;
+                gameType = GameType.WAN;
+                break;
+        }
+    }
+
+    public void OnTeamsGameValueChanged(int value) {
+        foreach (Button b in ToDisableOnTeamsGame)
+            b.interactable = value == 0;
+        if (value == 1)
+            ColorChanged(Color.red);
+        PlayerPrefs.SetInt("IsTeamsGame", value);
+    }
+
+
+    public void FindServers() {
+        Debug.Log(gameType);
+        if (gameType == GameType.LAN)
+            networkDiscovery.StartDiscovery();
+        else
+            JoinGame();
+    }
+    public void OnServerFound(ServerResponse resp) {
+        JoinGame();
     }
 
 }
