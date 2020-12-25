@@ -442,7 +442,11 @@ namespace Complete
             // Go through all the tanks and add each of their scores to the message
             foreach (Transform playerTank in TotalPlayersInGame)
             {
-                message += playerTank.GetComponent<TankNaming>().currentName + ": " + playerTank.GetComponent<TankController>().m_Wins + " WINS\n";
+
+                if (playerTank != null)
+                { 
+                    message += playerTank.GetComponent<TankNaming>().currentName + ": " + playerTank.GetComponent<TankController>().m_Wins + " WINS\n";
+                }
             }
 
             // If there is a game winner, change the entire message to reflect that

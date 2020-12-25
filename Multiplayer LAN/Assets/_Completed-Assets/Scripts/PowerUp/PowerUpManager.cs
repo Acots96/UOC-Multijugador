@@ -7,6 +7,15 @@ public class PowerUpManager : NetworkBehaviour
     public GameObject[] PowerUpPrefabs;
     public List<Transform> spawnPositions = new List<Transform>();
 
+    public float MinTime = 6.0f, MaxTime = 10.0f;
+
+    public static PowerUpManager Manager;
+
+    void Awake()
+    {
+        Manager = FindObjectOfType<PowerUpManager>();
+    }
+
     /**
     * Solo en el server, obtiene los puntos de spawn puestos para los
     * npcs enemigos y luego instancia el prefab de Enemy, ademas de 
@@ -14,12 +23,12 @@ public class PowerUpManager : NetworkBehaviour
     */
     public override void OnStartServer()
     {
-        Invoke(nameof(SpawnPowerUp), Random.Range(2.5f, 8.0f));
+        Manager.Invoke(nameof(SpawnPowerUp), Random.Range(MinTime, MaxTime));
     }
 
 
     [Server]
-    void SpawnPowerUp()
+    public void SpawnPowerUp()
     {
         foreach (Transform point in transform)
         {
@@ -36,12 +45,7 @@ public class PowerUpManager : NetworkBehaviour
         GameObject powerUp = Instantiate(PowerUpPrefabs[Random.Range(0, 3)], spawnPosition, spawnRotation);
         //
         NetworkServer.Spawn(powerUp);
-    }
-
-    [Server]
-    private void OnDestroy()
-    {
-        Invoke(nameof(SpawnPowerUp), Random.Range(2.5f, 8.0f));
+        Manager.Invoke(nameof(SpawnPowerUp), Random.Range(MinTime, MaxTime));
     }
 
 

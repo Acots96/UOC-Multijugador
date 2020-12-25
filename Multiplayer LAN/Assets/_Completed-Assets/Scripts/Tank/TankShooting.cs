@@ -32,8 +32,11 @@ namespace Complete
         public GameObject m_AltShellGO;
         public GameObject m_BombGO;
 
-        [SyncVar] public bool AllowBomb = false;
-        [SyncVar] public bool AllowRapidFire = false;
+        public bool AllowBomb = false;
+        public bool AllowRapidFire = false;
+
+        public GameObject BombIcon;
+        public GameObject ShellIcon;
 
         private void OnEnable()
         {
@@ -69,6 +72,9 @@ namespace Complete
             bombFireControl = (ButtonControl)m_FireAction.controls[2];      //Control [Ctrl Izquierda] para disparar proyectil bomba
 
             m_ChargeSpeed = (m_MaxLaunchForce - m_MinLaunchForce) / m_MaxChargeTime;
+
+            BombIcon.SetActive(false);
+            ShellIcon.SetActive(false);
         }
 
 
@@ -137,24 +143,24 @@ namespace Complete
         {
 
             //En caso de presionar alguno de los botones de disparo
-            return fireControl.wasPressedThisFrame || fastFireControl.wasPressedThisFrame || bombFireControl.wasPressedThisFrame;
-
+            //return fireControl.wasPressedThisFrame || fastFireControl.wasPressedThisFrame || bombFireControl.wasPressedThisFrame;
+            return fireControl.wasPressedThisFrame || (fastFireControl.wasPressedThisFrame && AllowRapidFire) || (bombFireControl.wasPressedThisFrame && AllowBomb);
         }
 
         private bool GetKeyStateButton()
         {
 
             //En caso de dejar sostenido alguno de los botones de disparo
-            return fireControl.isPressed || fastFireControl.isPressed || bombFireControl.isPressed;
-
+            //return fireControl.isPressed || fastFireControl.isPressed || bombFireControl.isPressed;
+            return fireControl.isPressed || (fastFireControl.isPressed && AllowRapidFire) || (bombFireControl.isPressed && AllowBomb);
         }
 
         private bool GetKeyStateButtonUp()
         {
 
             //En caso de soltar alguno de los botones de disparo
-            return fireControl.wasReleasedThisFrame || fastFireControl.wasReleasedThisFrame || bombFireControl.wasReleasedThisFrame;
-
+            //return fireControl.wasReleasedThisFrame || fastFireControl.wasReleasedThisFrame || bombFireControl.wasReleasedThisFrame;
+            return fireControl.wasReleasedThisFrame || (fastFireControl.wasReleasedThisFrame && AllowRapidFire) || (bombFireControl.wasReleasedThisFrame && AllowBomb);
         }
 
         [Client]

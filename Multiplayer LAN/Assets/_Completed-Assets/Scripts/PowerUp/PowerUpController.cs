@@ -13,9 +13,17 @@ public class PowerUpController : NetworkBehaviour
     }
     public PowerUpType PowerType;
 
+    public float HealAmmount = 50f;
+
     // Update is called once per frame
     void Update()
     {
         transform.Rotate(Vector3.up * RotationSpeed * Time.deltaTime);
+    }
+
+    [Server]
+    private void Start()
+    {
+        Destroy(gameObject, 12.0f); 
     }
 }
