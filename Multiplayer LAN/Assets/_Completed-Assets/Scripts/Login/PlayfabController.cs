@@ -271,4 +271,82 @@ public class PlayfabController : MonoBehaviour
     }
 
     #endregion
+    
+    #region FriendList
+    
+    [HideInInspector] public GameObject friendList;
+    [HideInInspector] public GameObject friendListItemPrefab;
+    [HideInInspector] public Transform friendListContainer;
+    
+    List<FriendInfo> _friends = null;
+
+    void DisplayFriends(List<FriendInfo> friendsCache)
+    {
+        friendsCache.ForEach(f => Debug.Log(f.FriendPlayFabId));
+    }
+
+    void DisplayFriendListPlayFabError(PlayFabError error)
+    {
+        string message = error.GenerateErrorReport();
+        messageManager.ShowMessage(true, message);
+    }
+
+    public void GetFriends() {
+        PlayFabClientAPI.GetFriendsList(new GetFriendsListRequest {
+            // IncludeSteamFriends = false,
+            // IncludeFacebookFriends = false,
+            // XboxToken = null
+        }, OnGetFriendListSuccess, DisplayFriendListPlayFabError);
+    }
+
+    private void OnGetFriendListSuccess(GetFriendsListResult result)
+    {
+        _friends = result.Friends;
+        // DisplayFriends(_friends); // triggers your UI
+        if (_friends.Count >= 1)
+        {
+            foreach (FriendInfo friend in _friends)
+            {
+                GameObject friendListItem = Instantiate(friendListItemPrefab, friendListContainer);
+                FriendListItemManager item = friendListItem.GetComponent<FriendListItemManager>();
+
+                item.SetListItemValue(friend);
+            }
+        }
+    }
+
+    public void AddFriend(FriendIdType idType, string friendId) {
+        Debug.Log("Enters There");
+        var request = new AddFriendRequest();
+        switch (idType) {
+            case FriendIdType.PlayFabId:
+                request.FriendPlayFabId = friendId;
+                break;
+            case FriendIdType.Username:
+                request.FriendUsername = friendId;
+                break;
+            case FriendIdType.Email:
+                request.FriendEmail = friendId;
+                break;
+            case FriendIdType.DisplayName:
+                request.FriendTitleDisplayName = friendId;
+                break;
+        }
+        // Execute request and update friends when we are done
+        PlayFabClientAPI.AddFriend(request, result => {
+            Debug.Log("Friend added successfully!");
+        }, DisplayFriendListPlayFabError);
+    }
+    
+    // unlike AddFriend, RemoveFriend only takes a PlayFab ID
+    // you can get this from the FriendInfo object under FriendPlayFabId
+    public void RemoveFriend(FriendInfo friendInfo) {
+        PlayFabClientAPI.RemoveFriend(new RemoveFriendRequest {
+            FriendPlayFabId = friendInfo.FriendPlayFabId
+        }, result => {
+            _friends.Remove(friendInfo);
+        }, DisplayFriendListPlayFabError);
+    }
+    
+    #endregion
 }
