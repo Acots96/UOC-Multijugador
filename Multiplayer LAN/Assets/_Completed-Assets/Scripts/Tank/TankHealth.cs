@@ -72,13 +72,9 @@ namespace Complete
             SetHealthUI();
         }
 
-
-        public void Heal(float amount)
+        [Command]
+        public void CmdHeal(float amount)
         {
-            if (!isServer)
-            {
-                return;
-            }
             // Reduce current health by the amount of Healing is done
             m_CurrentHealth += amount;
             if (m_CurrentHealth > m_StartingHealth)

@@ -9,6 +9,11 @@ public class TankController : NetworkBehaviour {
 
      [SyncVar] public int m_Wins;                    // Variable Sincronizada para almacenar rondas ganadas
 
+
+    public AudioClip HealSound;
+    public AudioClip PickupSound;
+
+    public AudioSource PowerUpAudioPlayer;
     /** metodos para indicar al GameManager que debe tener en cuenta 
      * (o dejar de tener en cuenta) este tanque.
      * 
@@ -44,13 +49,79 @@ public class TankController : NetworkBehaviour {
     }
 
 
+
     [Command]
     void CmdChangeStatusofTank(Transform player, bool status)
     {
         Complete.GameManager.TogglePlayerTank(player, status);
     }
 
+    //Power UPS
 
+    [Client]
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other.CompareTag("PowerUp"))
+        {
+            if (isLocalPlayer)
+            {
+                var powerUpController = other.GetComponent<PowerUpController>();
+                var tankShooting = GetComponent<Complete.TankShooting>();
+                if (powerUpController.PowerType == PowerUpController.PowerUpType.Bomb)
+                {
+                    Debug.Log("Get Bomb");
+                    tankShooting.AllowBomb = true;
+                    tankShooting.BombIcon.SetActive(tankShooting.AllowBomb);
+                    PowerUpAudioPlayer.clip = PickupSound;
+                    PowerUpAudioPlayer.Play();
+
+                    StartCoroutine(DisablePowerUp(tankShooting, PowerUpController.PowerUpType.Bomb));
+                }
+                else if (powerUpController.PowerType == PowerUpController.PowerUpType.RapidShell)
+                {
+                    Debug.Log("Get RapidFire");
+                    tankShooting.AllowRapidFire = true;
+                    tankShooting.ShellIcon.SetActive(tankShooting.AllowRapidFire);
+                    StartCoroutine(DisablePowerUp(tankShooting, PowerUpController.PowerUpType.RapidShell));
+                    PowerUpAudioPlayer.clip = PickupSound;
+                    PowerUpAudioPlayer.Play();
+                }
+                else if (powerUpController.PowerType == PowerUpController.PowerUpType.Health)
+                {
+                    Debug.Log("Get Health");
+                    GetComponent<Complete.TankHealth>().CmdHeal(powerUpController.HealAmmount);
+                    PowerUpAudioPlayer.clip = HealSound;
+                    PowerUpAudioPlayer.Play();
+                }
+                CmdDestroyPowerUp(other.gameObject);
+            }
+        }
+    }
+
+    IEnumerator DisablePowerUp(Complete.TankShooting tankShooting, PowerUpController.PowerUpType powerUpType)
+    {
+        Debug.Log("Disabling Power Up");
+        yield return new WaitForSeconds(8.0f);
+        if (powerUpType == PowerUpController.PowerUpType.Bomb)
+        {
+            Debug.Log("Bomb Disabled");
+            tankShooting.AllowBomb = false;
+            tankShooting.BombIcon.SetActive(tankShooting.AllowBomb);
+        }
+        else if (powerUpType == PowerUpController.PowerUpType.RapidShell)
+        {
+            Debug.Log("RapidFire Disabled");
+            tankShooting.AllowRapidFire = false;
+            tankShooting.ShellIcon.SetActive(tankShooting.AllowRapidFire);
+        }
+    }
+
+
+    [Command]
+    void CmdDestroyPowerUp(GameObject powerUp)
+    {
+        Destroy(powerUp);
+    }
     //Coloring
 
     public void Awake() {

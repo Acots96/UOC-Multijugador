@@ -504,7 +504,11 @@ namespace Complete
             // Go through all the tanks and add each of their scores to the message
             if (!IsTeamsGame) {
                 foreach (Transform playerTank in TotalPlayersInGame) {
-                    message += playerTank.GetComponent<TankNaming>().currentName + ": " + playerTank.GetComponent<TankController>().m_Wins + " WINS\n";
+
+                    if (playerTank != null)
+                    {
+                        message += playerTank.GetComponent<TankNaming>().currentName + ": " + playerTank.GetComponent<TankController>().m_Wins + " WINS\n";
+                    }
                 }
             } else {
                 message += "<color=#" + ColorUtility.ToHtmlStringRGB(Color.blue) + ">BLUE</color>: " + m_BlueWins + " WINS\n";
