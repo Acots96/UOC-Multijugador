@@ -40,15 +40,15 @@ public class PlayfabController : MonoBehaviour
         {
             PlayFabSettings.staticSettings.TitleId = "F30D0";
         }
-        
-        if (PlayerPrefs.HasKey("EMAIL"))
-        {
-            userEmail = PlayerPrefs.GetString("EMAIL");
-            userPassword = PlayerPrefs.GetString("PASSWORD");
-            userName = PlayerPrefs.GetString("USERNAME");
+    }
+    
+    public void DoAutoLogin()
+    {
+        userEmail = PlayerPrefs.GetString("EMAIL");
+        userPassword = PlayerPrefs.GetString("PASSWORD");
+        userName = PlayerPrefs.GetString("USERNAME");
             
-            OnClickLogin();
-        }
+        OnClickLogin();
     }
 
     private void OnLoginSuccess(LoginResult result)

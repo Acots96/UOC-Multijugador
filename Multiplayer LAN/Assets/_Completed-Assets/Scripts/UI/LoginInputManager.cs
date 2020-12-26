@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class LoginInputManager : MonoBehaviour
@@ -22,5 +23,10 @@ public class LoginInputManager : MonoBehaviour
         tmpIF_email.onValueChanged.AddListener(playfabController.GetUserEmail);
         tmpIF_password.onValueChanged.AddListener(playfabController.GetUserPassword);
         tmpIF_username.onValueChanged.AddListener(playfabController.GetUserName);
+        
+        if (PlayerPrefs.HasKey("EMAIL"))
+        {
+            playfabController.DoAutoLogin();
+        }
     }
 }
