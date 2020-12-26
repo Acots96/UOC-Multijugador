@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 namespace Offline
@@ -34,6 +35,11 @@ namespace Offline
         public void ExitGame()
         {
             Application.Quit();
+        }
+
+        public void BackToModeSelection()
+        {
+            SceneManager.LoadScene("OfflineOnline");
         }
 
         public void ToggleMainMenu()

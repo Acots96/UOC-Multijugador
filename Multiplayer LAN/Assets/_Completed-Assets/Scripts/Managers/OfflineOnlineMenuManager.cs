@@ -13,4 +13,9 @@ public class OfflineOnlineMenuManager : MonoBehaviour {
         SceneManager.LoadScene("OfflineScene");
     }
 
+    public void ExitGame()
+    {
+        Application.Quit();
+    }
+    
 }
