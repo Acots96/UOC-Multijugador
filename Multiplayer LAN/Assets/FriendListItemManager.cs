@@ -1,8 +1,11 @@
 ﻿using PlayFab.ClientModels;
+using TMPro;
 using UnityEngine;
 
 public class FriendListItemManager : MonoBehaviour
 {
+    public TMP_Text playerName;
+    
     private FriendInfo _friend;
     private PlayfabController _playfabController;
 
@@ -14,6 +17,8 @@ public class FriendListItemManager : MonoBehaviour
     public void SetListItemValue(FriendInfo friend)
     {
         _friend = friend;
+        
+        playerName.text = _friend.Username + " - " + _friend.TitleDisplayName;
     }
 
     public void OnRemoveFriendFromList()

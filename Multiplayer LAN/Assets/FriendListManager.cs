@@ -47,7 +47,6 @@ public class FriendListManager : MonoBehaviour
 
     public void OnAddFriendToFriendList()
     {
-        Debug.Log("EntersHere");
         _playFabController.AddFriend((FriendIdType) _friendIdTypeValue, _friendIdValue);
     }
 }

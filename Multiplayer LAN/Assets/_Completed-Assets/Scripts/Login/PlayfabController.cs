@@ -72,18 +72,18 @@ public class PlayfabController : MonoBehaviour
         {
             case PlayFabErrorCode.InvalidParams:
                 message = error.GenerateErrorReport();
-                messageManager.ShowMessage(true, message);
+                messageManager.ShowMessage(true, message, false);
                 break;
             case PlayFabErrorCode.AccountNotFound:
                 message = error.GenerateErrorReport() + "\nUser: " + userEmail + " does not exist. Registering new player...";
-                messageManager.ShowMessage(true, message);
+                messageManager.ShowMessage(true, message, false);
                 
                 var registerRequest = new RegisterPlayFabUserRequest{ Email = userEmail, Password = userPassword, Username = userName };
                 PlayFabClientAPI.RegisterPlayFabUser(registerRequest, OnRegisterSuccess, OnRegisterFailure);
                 break;
             case PlayFabErrorCode.InvalidEmailOrPassword:
                 message = error.GenerateErrorReport();
-                messageManager.ShowMessage(true, message);
+                messageManager.ShowMessage(true, message, false);
                 break;
         }
     }
@@ -91,14 +91,14 @@ public class PlayfabController : MonoBehaviour
     private void OnRegisterSuccess(RegisterPlayFabUserResult result)
     {
         string message = "Congratulations, new user has been registered";
-        messageManager.ShowMessage(true, message);
+        messageManager.ShowMessage(true, message, true);
         SavePlayerPrefs();
     }
     
     private void OnRegisterFailure(PlayFabError error)
     {
         string message = error.GenerateErrorReport();
-        messageManager.ShowMessage(true, message);
+        messageManager.ShowMessage(true, message, false);
     }
 
     private void OnGetPlayerProfileSuccess(GetPlayerProfileResult result)
@@ -122,7 +122,7 @@ public class PlayfabController : MonoBehaviour
     private void OnGetPlayerProfileFailure(PlayFabError error)
     {
         string message = error.GenerateErrorReport();
-        messageManager.ShowMessage(true, message);
+        messageManager.ShowMessage(true, message, false);
     }
 
     private void OnUpdateUserTitleDisplayNameSuccess(UpdateUserTitleDisplayNameResult result)
@@ -133,7 +133,7 @@ public class PlayfabController : MonoBehaviour
     private void OnUpdateUserTitleDisplayNameFailure(PlayFabError error)
     {
         string message = error.GenerateErrorReport();
-        messageManager.ShowMessage(true, message);
+        messageManager.ShowMessage(true, message, false);
     }
      
     private static void GoToLobby()
@@ -288,7 +288,7 @@ public class PlayfabController : MonoBehaviour
     void DisplayFriendListPlayFabError(PlayFabError error)
     {
         string message = error.GenerateErrorReport();
-        messageManager.ShowMessage(true, message);
+        messageManager.ShowMessage(true, message, false);
     }
 
     public void GetFriends() {
@@ -305,6 +305,11 @@ public class PlayfabController : MonoBehaviour
         // DisplayFriends(_friends); // triggers your UI
         if (_friends.Count >= 1)
         {
+            foreach (Transform child in friendListContainer)
+            {
+                Destroy(child.gameObject);
+            }
+
             foreach (FriendInfo friend in _friends)
             {
                 GameObject friendListItem = Instantiate(friendListItemPrefab, friendListContainer);
@@ -316,7 +321,6 @@ public class PlayfabController : MonoBehaviour
     }
 
     public void AddFriend(FriendIdType idType, string friendId) {
-        Debug.Log("Enters There");
         var request = new AddFriendRequest();
         switch (idType) {
             case FriendIdType.PlayFabId:
@@ -333,9 +337,15 @@ public class PlayfabController : MonoBehaviour
                 break;
         }
         // Execute request and update friends when we are done
-        PlayFabClientAPI.AddFriend(request, result => {
-            Debug.Log("Friend added successfully!");
-        }, DisplayFriendListPlayFabError);
+        PlayFabClientAPI.AddFriend(request, OnAddFriendSuccess, DisplayFriendListPlayFabError);
+    }
+
+    private void OnAddFriendSuccess(AddFriendResult result)
+    {
+        string message = "Friend added successfully!";
+        messageManager.ShowMessage(true, message, true);
+        
+        GetFriends();
     }
     
     // unlike AddFriend, RemoveFriend only takes a PlayFab ID
@@ -343,9 +353,15 @@ public class PlayfabController : MonoBehaviour
     public void RemoveFriend(FriendInfo friendInfo) {
         PlayFabClientAPI.RemoveFriend(new RemoveFriendRequest {
             FriendPlayFabId = friendInfo.FriendPlayFabId
-        }, result => {
-            _friends.Remove(friendInfo);
-        }, DisplayFriendListPlayFabError);
+        }, OnRemoveFriendSuccess, DisplayFriendListPlayFabError);
+    }
+
+    private void OnRemoveFriendSuccess(RemoveFriendResult result)
+    {
+        string message = "Friend removed successfully!";
+        messageManager.ShowMessage(true, message, true);
+        
+        GetFriends();
     }
     
     #endregion
