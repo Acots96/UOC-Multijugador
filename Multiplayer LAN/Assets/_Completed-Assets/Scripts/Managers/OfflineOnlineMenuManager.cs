@@ -9,7 +9,8 @@ public class OfflineOnlineMenuManager : MonoBehaviour {
         SceneManager.LoadScene("Login");
     }
 
-    public void StartOfflineScene() {
+    public void StartOfflineScene(int isTeams) {
+        PlayerPrefs.SetInt("IsTeamsGame", isTeams);
         SceneManager.LoadScene("OfflineScene");
     }
 
