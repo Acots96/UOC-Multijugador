@@ -5,6 +5,14 @@ using UnityEngine.SceneManagement;
 
 public class OfflineOnlineMenuManager : MonoBehaviour {
 
+    public GameObject LocalMatchPanel;
+
+
+    public void ToggleLocalOptions(bool tg)
+    {
+        LocalMatchPanel.SetActive(tg);
+    }
+
     public void StartLoginScene() {
         SceneManager.LoadScene("Login");
     }
