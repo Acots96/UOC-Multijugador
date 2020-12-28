@@ -44,6 +44,17 @@ namespace Offline
         }
 
 
+        public void Heal(float amount)
+        {
+            // Reduce current health by the amount of Healing is done
+            m_CurrentHealth += amount;
+            if (m_CurrentHealth > m_StartingHealth)
+                m_CurrentHealth = m_StartingHealth;
+            // Change the UI elements appropriately
+            SetHealthUI();
+        }
+
+
         public void TakeDamage (float amount)
         {
             // Reduce current health by the amount of damage done.

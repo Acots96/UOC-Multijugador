@@ -14,7 +14,7 @@ namespace Offline
 
         private Camera m_WorldCamera;                        // Used for referencing the camera.
 
-        private bool splitMode = true;
+        public static bool splitMode = true;
 
         public float limitDist = 25.0f;
         public float hysteresis = 5.0f;

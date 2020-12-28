@@ -35,6 +35,14 @@ public class @InputManager : IInputActionCollection, IDisposable
                     ""interactions"": """"
                 },
                 {
+                    ""name"": ""BombShoot"",
+                    ""type"": ""Button"",
+                    ""id"": ""9a2618ca-7dd5-47db-943b-b4e36eae7be5"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """"
+                },
+                {
                     ""name"": ""Movement"",
                     ""type"": ""Value"",
                     ""id"": ""c0e52332-c465-4d26-b070-eda52794e2f1"",
@@ -370,6 +378,50 @@ public class @InputManager : IInputActionCollection, IDisposable
                     ""action"": ""SpawnPlayer"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""c60a97ee-2006-4793-bcc7-fed1f567d134"",
+                    ""path"": ""<Keyboard>/leftCtrl"",
+                    ""interactions"": ""Press(behavior=2),Hold"",
+                    ""processors"": """",
+                    ""groups"": ""Player1"",
+                    ""action"": ""BombShoot"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""56c5f671-2093-4df6-a3b3-d12f39d799f6"",
+                    ""path"": ""<Keyboard>/end"",
+                    ""interactions"": ""Press(behavior=2),Hold"",
+                    ""processors"": """",
+                    ""groups"": ""Player2"",
+                    ""action"": ""BombShoot"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""6be9ab0d-2f42-4749-916f-4937f63e9588"",
+                    ""path"": ""<Keyboard>/rightCtrl"",
+                    ""interactions"": ""Press(behavior=2),Hold"",
+                    ""processors"": """",
+                    ""groups"": ""Player3"",
+                    ""action"": ""BombShoot"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""76c21b46-110e-441f-acde-af409dac45cd"",
+                    ""path"": ""<Keyboard>/numpadPeriod"",
+                    ""interactions"": ""Press(behavior=2),Hold"",
+                    ""processors"": """",
+                    ""groups"": ""Player4"",
+                    ""action"": ""BombShoot"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -425,6 +477,7 @@ public class @InputManager : IInputActionCollection, IDisposable
         m_PlayerControlls = asset.FindActionMap("PlayerControlls", throwIfNotFound: true);
         m_PlayerControlls_Shoot = m_PlayerControlls.FindAction("Shoot", throwIfNotFound: true);
         m_PlayerControlls_AltShoot = m_PlayerControlls.FindAction("AltShoot", throwIfNotFound: true);
+        m_PlayerControlls_BombShoot = m_PlayerControlls.FindAction("BombShoot", throwIfNotFound: true);
         m_PlayerControlls_Movement = m_PlayerControlls.FindAction("Movement", throwIfNotFound: true);
         m_PlayerControlls_SpawnPlayer = m_PlayerControlls.FindAction("SpawnPlayer", throwIfNotFound: true);
     }
@@ -478,6 +531,7 @@ public class @InputManager : IInputActionCollection, IDisposable
     private IPlayerControllsActions m_PlayerControllsActionsCallbackInterface;
     private readonly InputAction m_PlayerControlls_Shoot;
     private readonly InputAction m_PlayerControlls_AltShoot;
+    private readonly InputAction m_PlayerControlls_BombShoot;
     private readonly InputAction m_PlayerControlls_Movement;
     private readonly InputAction m_PlayerControlls_SpawnPlayer;
     public struct PlayerControllsActions
@@ -486,6 +540,7 @@ public class @InputManager : IInputActionCollection, IDisposable
         public PlayerControllsActions(@InputManager wrapper) { m_Wrapper = wrapper; }
         public InputAction @Shoot => m_Wrapper.m_PlayerControlls_Shoot;
         public InputAction @AltShoot => m_Wrapper.m_PlayerControlls_AltShoot;
+        public InputAction @BombShoot => m_Wrapper.m_PlayerControlls_BombShoot;
         public InputAction @Movement => m_Wrapper.m_PlayerControlls_Movement;
         public InputAction @SpawnPlayer => m_Wrapper.m_PlayerControlls_SpawnPlayer;
         public InputActionMap Get() { return m_Wrapper.m_PlayerControlls; }
@@ -503,6 +558,9 @@ public class @InputManager : IInputActionCollection, IDisposable
                 @AltShoot.started -= m_Wrapper.m_PlayerControllsActionsCallbackInterface.OnAltShoot;
                 @AltShoot.performed -= m_Wrapper.m_PlayerControllsActionsCallbackInterface.OnAltShoot;
                 @AltShoot.canceled -= m_Wrapper.m_PlayerControllsActionsCallbackInterface.OnAltShoot;
+                @BombShoot.started -= m_Wrapper.m_PlayerControllsActionsCallbackInterface.OnBombShoot;
+                @BombShoot.performed -= m_Wrapper.m_PlayerControllsActionsCallbackInterface.OnBombShoot;
+                @BombShoot.canceled -= m_Wrapper.m_PlayerControllsActionsCallbackInterface.OnBombShoot;
                 @Movement.started -= m_Wrapper.m_PlayerControllsActionsCallbackInterface.OnMovement;
                 @Movement.performed -= m_Wrapper.m_PlayerControllsActionsCallbackInterface.OnMovement;
                 @Movement.canceled -= m_Wrapper.m_PlayerControllsActionsCallbackInterface.OnMovement;
@@ -519,6 +577,9 @@ public class @InputManager : IInputActionCollection, IDisposable
                 @AltShoot.started += instance.OnAltShoot;
                 @AltShoot.performed += instance.OnAltShoot;
                 @AltShoot.canceled += instance.OnAltShoot;
+                @BombShoot.started += instance.OnBombShoot;
+                @BombShoot.performed += instance.OnBombShoot;
+                @BombShoot.canceled += instance.OnBombShoot;
                 @Movement.started += instance.OnMovement;
                 @Movement.performed += instance.OnMovement;
                 @Movement.canceled += instance.OnMovement;
@@ -569,6 +630,7 @@ public class @InputManager : IInputActionCollection, IDisposable
     {
         void OnShoot(InputAction.CallbackContext context);
         void OnAltShoot(InputAction.CallbackContext context);
+        void OnBombShoot(InputAction.CallbackContext context);
         void OnMovement(InputAction.CallbackContext context);
         void OnSpawnPlayer(InputAction.CallbackContext context);
     }

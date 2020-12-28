@@ -334,6 +334,7 @@ namespace Offline
                 // Instantiate(m_MultiplayerEventSystemPrefab, m_Tanks[i].m_SpawnPoint.position, m_Tanks[i].m_SpawnPoint.rotation) as GameObject;
                 Instantiate(m_MultiplayerEventSystemPrefab, spawnPointPosition, spawnPointRotation) as GameObject;
             m_Tanks[i].m_PlayerNumber = i + 1;
+            m_Tanks[i].PlayerName = "Player "+ m_Tanks[i].m_PlayerNumber;
             m_Tanks[i].Setup(GameTeam.NoTeam);
             AddCamera(i, m_MainCamera);
 

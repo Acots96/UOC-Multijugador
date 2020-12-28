@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections;
 
 namespace Offline
 {
@@ -12,15 +13,54 @@ namespace Offline
         public float m_MaxLifeTime = 2f;                    // The time in seconds before the shell is removed.
         public float m_ExplosionRadius = 5f;                // The maximum distance away from the explosion tanks can be and are still affected.
 
+        public bool IsBomb = false;                         //Indica si es o no una bomba
+        public float TimeForDetonate = 4f;                  //Tiempo para detonar la bomba
+
+        private Color bombBodyMaterialColor;
+        private Color bombFuseMaterialColor;
 
         private void Start ()
         {
             // If it isn't destroyed by then, destroy the shell after it's lifetime.
-            Destroy (gameObject, m_MaxLifeTime);
+            if (!IsBomb)
+            {
+                Destroy(gameObject, m_MaxLifeTime);
+            }
+            else
+            {
+                //Lanza el método correspondiente para que la bomba se detone en el tiempo deseado
+                Invoke("Explosion", TimeForDetonate);
+                //ejecuta la corutina de parpadeo de la bomba
+                StartCoroutine("BlinkBomb");
+                //se guardan los colores originales del material
+                bombBodyMaterialColor = GetComponent<MeshRenderer>().materials[0].color;
+                bombFuseMaterialColor = GetComponent<MeshRenderer>().materials[1].color;
+            }
+        }
+
+        private void OnTriggerEnter(Collider other)
+        {
+            if (!IsBomb)
+                Explosion();
+        }
+
+        IEnumerator BlinkBomb()
+        {
+            //un segundo antes de detonar ejecuta los cambios de color
+            yield return new WaitForSeconds(TimeForDetonate - 1f);
+            while (gameObject.activeSelf)
+            {
+                GetComponent<MeshRenderer>().materials[0].color = Color.red;
+                GetComponent<MeshRenderer>().materials[1].color = Color.red;
+                yield return new WaitForSeconds(0.0625f);
+                GetComponent<MeshRenderer>().materials[0].color = bombBodyMaterialColor;
+                GetComponent<MeshRenderer>().materials[1].color = bombFuseMaterialColor;
+                yield return new WaitForSeconds(0.0625f);
+            }
         }
 
 
-        private void OnTriggerEnter (Collider other)
+        private void Explosion ()
         {
 			// Collect all the colliders in a sphere from the shell's current position to a radius of the explosion radius.
             Collider[] colliders = Physics.OverlapSphere (transform.position, m_ExplosionRadius, m_TankMask);

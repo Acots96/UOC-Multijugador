@@ -9,6 +9,7 @@ namespace Offline
         public int m_PlayerNumber = 1;              // Used to identify the different players.
         public Rigidbody m_Shell;                   // Prefab of the shell.
         public Rigidbody m_ShellAlt;                   // Prefab of the red shell.
+        public Rigidbody m_Bomb;                   // Prefab of the red shell.
         public Transform m_FireTransform;           // A child of the tank where the shells are spawned.
         public Slider m_AimSlider;                  // A child of the tank that displays the current launch force.
         public AudioSource m_ShootingAudio;         // Reference to the audio source used to play the shooting audio. NB: different to the movement audio source.
@@ -18,11 +19,11 @@ namespace Offline
         public float m_MaxLaunchForce = 30f;        // The force given to the shell if the fire button is held for the max charge time.
         public float m_MaxChargeTime = 0.75f;       // How long the shell can charge for before it is fired at max force.
 
-
         private float m_CurrentLaunchForce;         // The force that will be given to the shell when the fire button is released.
         private float m_ChargeSpeed;                // How fast the launch force increases, based on the max charge time.
-        private bool m_Fired;                       // Whether or not the shell has been launched with this button press.
-        private bool m_AltFire;                       // Whether or not the alt shell has been launched with this button press.
+        public bool m_Fired;                       // Whether or not the shell has been launched with this button press.
+        public bool m_AltFire;                       // Whether or not the alt shell has been launched with this button press.
+        public bool m_BombFire;                       // Whether or not the alt shell has been launched with this button press.
 
         private float inputShootVal;
         private float inputAltShootVal;
@@ -33,8 +34,19 @@ namespace Offline
         private bool altShootKeyPressed = false;
         private float altShootKeyPressedTime = 0f;
 
+        private bool bombShootKeyPressed = false;
+        private float bombShootKeyPressedTime = 0f;
+
+        public bool AllowBomb = false;
+        public bool AllowRapidFire = false;
+
+        public GameObject BombIcon;
+        public GameObject ShellIcon;
+
         private void OnEnable()
         {
+            BombIcon.SetActive(false);
+            ShellIcon.SetActive(false);
             // When the tank is turned on, reset the launch force and the UI
             m_CurrentLaunchForce = m_MinLaunchForce;
             m_AimSlider.value = m_MinLaunchForce;
@@ -45,6 +57,8 @@ namespace Offline
         {
             // The rate that the launch force charges up is the range of possible forces by the max charge time.
             m_ChargeSpeed = (m_MaxLaunchForce - m_MinLaunchForce) / m_MaxChargeTime;
+
+
         }
 
 
@@ -80,11 +94,27 @@ namespace Offline
                 m_AimSlider.value = m_CurrentLaunchForce;
             }
             // Otherwise, if the fire button is released and the shell hasn't been launched yet...
-            else if (FireButton(2) && (shootKeyPressedTime > 0f || altShootKeyPressedTime > 0f) && !m_Fired)
+            else if (FireButton(2) && (shootKeyPressedTime > 0f || altShootKeyPressedTime > 0f || bombShootKeyPressedTime > 0f) && !m_Fired)
             {
                 // ... launch the shell.
                 Fire();
             }
+
+
+/*            if (!AllowBomb)
+            {
+                bombShootKeyPressed = false;
+                bombShootKeyPressedTime = 0f;
+                m_BombFire = false;
+            }
+
+            if (!AllowRapidFire)
+            {
+                altShootKeyPressed = false;
+                altShootKeyPressedTime = 0f;
+                m_AltFire = false;
+            }*/
+
         }
         
         // method that returns if button to shot has been pressed and sets variable to
@@ -93,20 +123,23 @@ namespace Offline
         {
             bool action = false;
             m_AltFire = false;
-            
+            m_BombFire = false;
+
             switch (mode)
             {
                 case 0:
                 case 1:
                     action = shootKeyPressed ? true : false;
                     m_AltFire = altShootKeyPressed ? true : false;
+                    m_BombFire = bombShootKeyPressed ? true : false;
                     break;
                 case 2:
                     action = (!shootKeyPressed && shootKeyPressedTime > 0f) ? true : false;
                     m_AltFire = (!altShootKeyPressed && altShootKeyPressedTime > 0f) ? true : false;
+                    m_BombFire = (!bombShootKeyPressed && bombShootKeyPressedTime > 0f) ? true : false;
                     break;
             }
-            return action || m_AltFire;
+            return action || m_AltFire || m_BombFire;
         }
 
         
@@ -116,11 +149,26 @@ namespace Offline
             m_Fired = true;
             shootKeyPressedTime = 0f;
             altShootKeyPressedTime = 0f;
-
+            bombShootKeyPressedTime = 0f;
+            Rigidbody shellInstance = new Rigidbody();
             // Create an instance of the shell and store a reference to it's rigidbody.
-            Rigidbody shellInstance = m_AltFire ?
+            /*Rigidbody shellInstance = m_AltFire ?
                 Instantiate(m_ShellAlt, m_FireTransform.position, m_FireTransform.rotation) as Rigidbody :
-                Instantiate(m_Shell, m_FireTransform.position, m_FireTransform.rotation) as Rigidbody;
+                Instantiate(m_Shell, m_FireTransform.position, m_FireTransform.rotation) as Rigidbody;*/
+
+            if (m_AltFire && !m_BombFire)
+            {
+                shellInstance = Instantiate(m_ShellAlt, m_FireTransform.position, m_FireTransform.rotation) as Rigidbody;
+            }
+            else if (!m_AltFire && m_BombFire)
+            {
+                shellInstance = Instantiate(m_Bomb, m_FireTransform.position, m_FireTransform.rotation) as Rigidbody;
+            }
+            else if(!m_AltFire && !m_BombFire)
+            {
+                shellInstance = Instantiate(m_Shell, m_FireTransform.position, m_FireTransform.rotation) as Rigidbody;
+            }
+
 
             shellInstance.tag = tag;
 
@@ -161,15 +209,52 @@ namespace Offline
         public void OnAltShoot(InputAction.CallbackContext ctx)
         {
             inputAltShootVal = ctx.ReadValue<float>();
-            
-            if (ctx.performed)
+
+            if (AllowRapidFire)
             {
-                altShootKeyPressed = true;
-                altShootKeyPressedTime = 0f;
-            } else if (ctx.canceled)
+                if (ctx.performed)
+                {
+                    altShootKeyPressed = true;
+                    altShootKeyPressedTime = 0f;
+                }
+                else if (ctx.canceled)
+                {
+                    altShootKeyPressed = false;
+                    altShootKeyPressedTime = (float)ctx.duration;
+                }
+            }
+            else
             {
                 altShootKeyPressed = false;
-                altShootKeyPressedTime = (float) ctx.duration;
+                altShootKeyPressedTime = 0f;
+                m_AltFire = false;
+                return;
+            }
+        }
+
+        public void OnBombShoot(InputAction.CallbackContext ctx)
+        {
+            inputAltShootVal = ctx.ReadValue<float>();
+
+            if (AllowBomb)
+            {
+                if (ctx.performed)
+                {
+                    bombShootKeyPressed = true;
+                    bombShootKeyPressedTime = 0f;
+                }
+                else if (ctx.canceled)
+                {
+                    bombShootKeyPressed = false;
+                    bombShootKeyPressedTime = (float)ctx.duration;
+                }
+            }
+            else
+            {
+                bombShootKeyPressed = false;
+                bombShootKeyPressedTime = 0f;
+                m_BombFire = false;
+                return;
             }
         }
     }
