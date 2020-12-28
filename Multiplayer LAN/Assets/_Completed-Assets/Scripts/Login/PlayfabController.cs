@@ -302,13 +302,14 @@ public class PlayfabController : MonoBehaviour
     private void OnGetFriendListSuccess(GetFriendsListResult result)
     {
         _friends = result.Friends;
-        // DisplayFriends(_friends); // triggers your UI
+
+        foreach (Transform child in friendListContainer)
+        {
+            Destroy(child.gameObject);
+        }
+        
         if (_friends.Count >= 1)
         {
-            foreach (Transform child in friendListContainer)
-            {
-                Destroy(child.gameObject);
-            }
 
             foreach (FriendInfo friend in _friends)
             {
