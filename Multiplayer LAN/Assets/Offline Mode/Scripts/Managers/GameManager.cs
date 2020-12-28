@@ -60,7 +60,8 @@ namespace Offline
             m_SpawnPointsInUse = Enumerable.Repeat(false, m_AvailableSpawnPoints.Length).ToArray();
 
             //
-            if (PlayerPrefs.GetInt("IsTeamsGame") == 1) {
+            if (PlayerPrefs.GetInt("IsTeamsGame") == 1)
+            {
                 isTeamsGame = true;
                 m_StartGamePopup.SetActive(false);
                 m_StartGamePopupTeams.SetActive(true);
@@ -285,13 +286,17 @@ namespace Offline
                     // Instantiate(m_MultiplayerEventSystemPrefab, m_Tanks[i].m_SpawnPoint.position, m_Tanks[i].m_SpawnPoint.rotation) as GameObject;
                     Instantiate(m_MultiplayerEventSystemPrefab, spawnPointPosition, spawnPointRotation) as GameObject;
                 m_Tanks[i].m_PlayerNumber = i + 1;
+                
 
-                if (isTeamsGame) {
+                if (isTeamsGame)
+                {
                     m_Tanks[i].Setup(playersAreBlue[i] ? GameTeam.Blue : GameTeam.Red);
-                } else {
+                }
+                else
+                {
                     m_Tanks[i].Setup(GameTeam.NoTeam);
                 }
-
+                m_Tanks[i].m_PlayerText.text = "Player " + m_Tanks[i].m_PlayerNumber;
                 AddCamera(i, m_MainCamera);
             }
         }
@@ -300,14 +305,12 @@ namespace Offline
         {
             int idx = UnityEngine.Random.Range(0, m_AvailableSpawnPoints.Length);
             bool inUse = m_SpawnPointsInUse[idx];
-
             while (inUse)
             {
                 idx++;
                 if (idx >= m_AvailableSpawnPoints.Length) idx = 0;
                 inUse = m_SpawnPointsInUse[idx];
             }
-
             m_SpawnPointsInUse[idx] = true;
             return m_AvailableSpawnPoints[idx];
         }
@@ -334,8 +337,8 @@ namespace Offline
                 // Instantiate(m_MultiplayerEventSystemPrefab, m_Tanks[i].m_SpawnPoint.position, m_Tanks[i].m_SpawnPoint.rotation) as GameObject;
                 Instantiate(m_MultiplayerEventSystemPrefab, spawnPointPosition, spawnPointRotation) as GameObject;
             m_Tanks[i].m_PlayerNumber = i + 1;
-            m_Tanks[i].PlayerName = "Player "+ m_Tanks[i].m_PlayerNumber;
             m_Tanks[i].Setup(GameTeam.NoTeam);
+            m_Tanks[i].m_PlayerText.text = "Player " + m_Tanks[i].m_PlayerNumber;
             AddCamera(i, m_MainCamera);
 
             // updates transform array in cameraControl with the player transforms
@@ -353,14 +356,12 @@ namespace Offline
         {
             // Create a collection of transforms the same size as the number of tanks.
             Transform[] targets = new Transform[m_Tanks.Length];
-
             // For each of these transforms...
             for (int i = 0; i < m_ActualPlayersNum; i++)
             {
                 // ... set it to the appropriate tank transform.
                 targets[i] = m_Tanks[i].m_Instance.transform;
             }
-
             // These are the targets the camera should follow.
             m_CameraControl.m_Targets = targets;
         }
@@ -481,27 +482,34 @@ namespace Offline
         // This is used to check if there is one or fewer tanks remaining and thus the round should end.
         private bool OneTankLeft()
         {
-            if (!isTeamsGame) {
+            if (!isTeamsGame)
+            {
                 // Start the count of tanks left at zero.
                 int numTanksLeft = 0;
                 // Go through all the tanks...
-                for (int i = 0; i < m_ActualPlayersNum; i++) {
+                for (int i = 0; i < m_ActualPlayersNum; i++)
+                {
                     // ... and if they are active, increment the counter.
                     if (m_Tanks[i].m_Instance.activeSelf)
                         numTanksLeft++;
                 }
                 // If there are one or fewer tanks remaining return true, otherwise return false.
                 return numTanksLeft <= 1;
-            } else {
+            }
+            else
+            {
                 bool blue = false, red = false;
                 // Go through all the tanks to see if there only remains one team
-                for (int i = 0; i < m_ActualPlayersNum; i++) {
-                    if (m_Tanks[i].m_Instance.activeSelf) {
+                for (int i = 0; i < m_ActualPlayersNum; i++)
+                {
+                    if (m_Tanks[i].m_Instance.activeSelf)
+                    {
                         blue |= m_Tanks[i].Team == GameTeam.Blue;
                         red |= m_Tanks[i].Team == GameTeam.Red;
                     }
                 }
-                if (blue ^ red) {
+                if (blue ^ red)
+                {
                     if (blue)
                         m_BlueWins++;
                     else

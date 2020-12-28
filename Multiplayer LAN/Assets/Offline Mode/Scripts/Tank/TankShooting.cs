@@ -19,7 +19,7 @@ namespace Offline
         public float m_MaxLaunchForce = 30f;        // The force given to the shell if the fire button is held for the max charge time.
         public float m_MaxChargeTime = 0.75f;       // How long the shell can charge for before it is fired at max force.
 
-        private float m_CurrentLaunchForce;         // The force that will be given to the shell when the fire button is released.
+        public float m_CurrentLaunchForce;         // The force that will be given to the shell when the fire button is released.
         private float m_ChargeSpeed;                // How fast the launch force increases, based on the max charge time.
         public bool m_Fired;                       // Whether or not the shell has been launched with this button press.
         public bool m_AltFire;                       // Whether or not the alt shell has been launched with this button press.
@@ -27,6 +27,7 @@ namespace Offline
 
         private float inputShootVal;
         private float inputAltShootVal;
+        private float inputBombShootVal;
 
         private bool shootKeyPressed = false;
         private float shootKeyPressedTime = 0f;
@@ -57,8 +58,6 @@ namespace Offline
         {
             // The rate that the launch force charges up is the range of possible forces by the max charge time.
             m_ChargeSpeed = (m_MaxLaunchForce - m_MinLaunchForce) / m_MaxChargeTime;
-
-
         }
 
 
@@ -90,7 +89,6 @@ namespace Offline
             {
                 // Increment the launch force and update the slider.
                 m_CurrentLaunchForce += m_ChargeSpeed * Time.deltaTime;
-
                 m_AimSlider.value = m_CurrentLaunchForce;
             }
             // Otherwise, if the fire button is released and the shell hasn't been launched yet...
@@ -100,8 +98,7 @@ namespace Offline
                 Fire();
             }
 
-
-/*            if (!AllowBomb)
+           if (!AllowBomb)
             {
                 bombShootKeyPressed = false;
                 bombShootKeyPressedTime = 0f;
@@ -113,7 +110,7 @@ namespace Offline
                 altShootKeyPressed = false;
                 altShootKeyPressedTime = 0f;
                 m_AltFire = false;
-            }*/
+            }
 
         }
         
@@ -168,12 +165,11 @@ namespace Offline
             {
                 shellInstance = Instantiate(m_Shell, m_FireTransform.position, m_FireTransform.rotation) as Rigidbody;
             }
-
-
             shellInstance.tag = tag;
 
             // Set the shell's velocity to the launch force in the fire position's forward direction.
             shellInstance.velocity = m_CurrentLaunchForce * m_FireTransform.forward;
+            if (m_BombFire) shellInstance.velocity *= 0.50f;
             if (m_AltFire) shellInstance.velocity *= 1.50f;
 
             // Change the clip to the firing clip and play it.
@@ -208,10 +204,9 @@ namespace Offline
         // 'Press and Release' interaction have to be set before 'Hold' for proper event activation
         public void OnAltShoot(InputAction.CallbackContext ctx)
         {
-            inputAltShootVal = ctx.ReadValue<float>();
-
             if (AllowRapidFire)
             {
+                inputAltShootVal = ctx.ReadValue<float>();
                 if (ctx.performed)
                 {
                     altShootKeyPressed = true;
@@ -223,21 +218,16 @@ namespace Offline
                     altShootKeyPressedTime = (float)ctx.duration;
                 }
             }
-            else
-            {
-                altShootKeyPressed = false;
-                altShootKeyPressedTime = 0f;
-                m_AltFire = false;
-                return;
-            }
         }
 
+        // Event for the Bomb Shoot Input key
+        // Note: ctx.duration  is always 0 if no interaction 'Hold' is set for the key
+        // 'Press and Release' interaction have to be set before 'Hold' for proper event activation
         public void OnBombShoot(InputAction.CallbackContext ctx)
         {
-            inputAltShootVal = ctx.ReadValue<float>();
-
             if (AllowBomb)
             {
+                inputBombShootVal = ctx.ReadValue<float>();
                 if (ctx.performed)
                 {
                     bombShootKeyPressed = true;
@@ -248,13 +238,6 @@ namespace Offline
                     bombShootKeyPressed = false;
                     bombShootKeyPressedTime = (float)ctx.duration;
                 }
-            }
-            else
-            {
-                bombShootKeyPressed = false;
-                bombShootKeyPressedTime = 0f;
-                m_BombFire = false;
-                return;
             }
         }
     }

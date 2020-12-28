@@ -17,7 +17,7 @@ public class TankPowerUpManager : MonoBehaviour
                 var tankShooting = GetComponent<Offline.TankShooting>();
                 if (powerUpController.PowerType == Offline.PowerUpController.PowerUpType.Bomb)
                 {
-                    Debug.Log("Get Bomb");
+                    //Debug.Log("Get Bomb");
                     tankShooting.AllowBomb = true;
                     tankShooting.BombIcon.SetActive(tankShooting.AllowBomb);
                     PowerUpAudioPlayer.clip = PickupSound;
@@ -27,7 +27,7 @@ public class TankPowerUpManager : MonoBehaviour
                 }
                 else if (powerUpController.PowerType == Offline.PowerUpController.PowerUpType.RapidShell)
                 {
-                    Debug.Log("Get RapidFire");
+                    //Debug.Log("Get RapidFire");
                     tankShooting.AllowRapidFire = true;
                     tankShooting.ShellIcon.SetActive(tankShooting.AllowRapidFire);
                     StartCoroutine(DisablePowerUp(tankShooting, Offline.PowerUpController.PowerUpType.RapidShell));
@@ -36,35 +36,32 @@ public class TankPowerUpManager : MonoBehaviour
                 }
                 else if (powerUpController.PowerType == Offline.PowerUpController.PowerUpType.Health)
                 {
-                    Debug.Log("Get Health");
+                    //Debug.Log("Get Health");
                     GetComponent<Offline.TankHealth >().Heal(powerUpController.HealAmmount);
                     PowerUpAudioPlayer.clip = HealSound;
                     PowerUpAudioPlayer.Play();
                 }
-                DestroyPowerUp(other.gameObject);
+                Destroy(other.gameObject);
             }
     }
 
     IEnumerator DisablePowerUp(Offline.TankShooting tankShooting, Offline.PowerUpController.PowerUpType powerUpType)
     {
-        Debug.Log("Disabling Power Up");
+        //Debug.Log("Disabling Power Up");
         yield return new WaitForSeconds(8.0f);
         if (powerUpType == Offline.PowerUpController.PowerUpType.Bomb)
         {
-            Debug.Log("Bomb Disabled");
+            //Debug.Log("Bomb Disabled");
             tankShooting.AllowBomb = false;
             tankShooting.BombIcon.SetActive(tankShooting.AllowBomb);
+            tankShooting.m_CurrentLaunchForce = tankShooting.m_MinLaunchForce;
         }
         else if (powerUpType == Offline.PowerUpController.PowerUpType.RapidShell)
         {
-            Debug.Log("RapidFire Disabled");
+            //Debug.Log("RapidFire Disabled");
             tankShooting.AllowRapidFire = false;
             tankShooting.ShellIcon.SetActive(tankShooting.AllowRapidFire);
+            tankShooting.m_CurrentLaunchForce = tankShooting.m_MinLaunchForce;
         }
-    }
-
-    void DestroyPowerUp(GameObject powerUp)
-    {
-        Destroy(powerUp);
     }
 }
