@@ -186,7 +186,8 @@ public class TankController : NetworkBehaviour {
         color = newColor;
         foreach (MeshRenderer rend in renderers)
             rend.material.color = color;
-        tag = color.b == 1 ? "Blue" : "Red";
+        if (Complete.GameManager.IsTeamsGame)
+            tag = color.b == 1 ? "Blue" : "Red";
         Complete.GameManager.UpdateTeamsText();
     }
 

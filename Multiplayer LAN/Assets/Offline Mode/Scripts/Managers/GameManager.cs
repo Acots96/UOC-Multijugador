@@ -42,7 +42,7 @@ namespace Offline
 
         //
         public GameObject m_StartGamePopup, m_StartGamePopupTeams;
-        private bool isTeamsGame;
+        public static bool IsTeamsGame { get; private set; }
         public enum GameTeam { NoTeam, Blue, Red }
         private int m_BlueWins, m_RedWins;
 
@@ -60,12 +60,13 @@ namespace Offline
             m_SpawnPointsInUse = Enumerable.Repeat(false, m_AvailableSpawnPoints.Length).ToArray();
 
             //
-            if (PlayerPrefs.GetInt("IsTeamsGame") == 1)
-            {
-                isTeamsGame = true;
+            if (PlayerPrefs.GetInt("IsTeamsGame") == 1) {
+                IsTeamsGame = true;
                 m_StartGamePopup.SetActive(false);
                 m_StartGamePopupTeams.SetActive(true);
                 m_UiButtonManager.mainMenuGO = m_StartGamePopupTeams;
+            } else {
+                IsTeamsGame = false;
             }
         }
 
@@ -288,7 +289,7 @@ namespace Offline
                 m_Tanks[i].m_PlayerNumber = i + 1;
                 
 
-                if (isTeamsGame)
+                if (IsTeamsGame)
                 {
                     m_Tanks[i].Setup(playersAreBlue[i] ? GameTeam.Blue : GameTeam.Red);
                 }
@@ -482,7 +483,7 @@ namespace Offline
         // This is used to check if there is one or fewer tanks remaining and thus the round should end.
         private bool OneTankLeft()
         {
-            if (!isTeamsGame)
+            if (!IsTeamsGame)
             {
                 // Start the count of tanks left at zero.
                 int numTanksLeft = 0;
@@ -562,7 +563,7 @@ namespace Offline
 
             // If there is a winner then change the message to reflect that.
             if (m_RoundWinner != null) {
-                if (!isTeamsGame)
+                if (!IsTeamsGame)
                     message = m_RoundWinner.m_ColoredPlayerText + " WINS THE ROUND!";
                 else
                     message = "TEAM " + m_RoundWinner.m_ColoredPlayerText + " WINS THE ROUND!";
@@ -572,7 +573,7 @@ namespace Offline
             message += "\n\n\n\n";
 
             // Go through all the tanks and add each of their scores to the message.
-            if (!isTeamsGame) {
+            if (!IsTeamsGame) {
                 for (int i = 0; i < m_ActualPlayersNum; i++) {
                     message += m_Tanks[i].m_ColoredPlayerText + ": " + m_Tanks[i].m_Wins + " WINS\n";
                 }
@@ -583,7 +584,7 @@ namespace Offline
 
             // If there is a game winner, change the entire message to reflect that.
             if (m_GameWinner != null) {
-                if (!isTeamsGame)
+                if (!IsTeamsGame)
                     message = m_GameWinner.m_ColoredPlayerText + " WINS THE GAME!";
                 else
                     message = "TEAM " + m_GameWinner.m_ColoredPlayerText + " WINS THE GAME!";

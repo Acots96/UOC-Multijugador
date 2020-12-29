@@ -56,6 +56,8 @@ namespace Complete
             if (PlayerPrefs.GetInt("IsTeamsGame") == 1) {
                 IsTeamsGame = true;
                 TeamsMenu.SetActive(true);
+            } else {
+                IsTeamsGame = false;
             }
         }
 
