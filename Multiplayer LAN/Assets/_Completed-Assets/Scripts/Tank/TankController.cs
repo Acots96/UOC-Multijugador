@@ -204,6 +204,12 @@ public class TankController : NetworkBehaviour {
 
 
     public void ExitTeamsGame() {
+        if (isServer) {
+            LobbyMenu.manager.StopServer();
+            LobbyMenu.manager.StopHost();
+        } else {
+            LobbyMenu.manager.StopClient();
+        }
         NetworkServer.RemovePlayerForConnection(connectionToServer, true);
         //SceneManager.LoadScene("Lobby");
     }

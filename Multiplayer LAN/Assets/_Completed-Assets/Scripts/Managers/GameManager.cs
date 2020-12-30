@@ -42,6 +42,9 @@ namespace Complete
         public enum GameTeam { NoTeam, Blue, Red }
         private int m_BlueWins, m_RedWins;
 
+        public Toggle FriendlyFireToggle;
+        public static bool IsFriendlyFire { get; private set; }
+
 
         private void Awake() {
             if (Instance) {
@@ -60,6 +63,38 @@ namespace Complete
                 IsTeamsGame = false;
             }
         }
+
+
+        public override void OnStartServer() {
+            FriendlyFireToggle.interactable = true;
+            base.OnStartServer();
+        }
+
+        // para sincronizar la variable en los clientes desde el server
+        // hook=SyncFriendlyFireToggle para que llame al metodo cada vez que cambie la variable
+        [SyncVar(hook = "SyncFriendlyFireToggle")]
+        private bool toggleBool;
+
+        private void SyncFriendlyFireToggle(bool oldToggle, bool newToggle) {
+            toggleBool = newToggle;
+            FriendlyFireToggle.isOn = toggleBool;
+            IsFriendlyFire = toggleBool;
+        }
+
+        // para que se ejecute en el server y por lo tanto pueda tenerse en cuenta
+        // en los demas clientes
+        [ClientRpc]
+        private void RpcToggleChanged(bool b) {
+            SyncFriendlyFireToggle(toggleBool, b);
+        }
+
+        public void OnValueChangedToggle(bool value) {
+            if (isServer) {
+                IsFriendlyFire = value;
+                RpcToggleChanged(value);
+            }
+        }
+
 
         private void Start()
         {

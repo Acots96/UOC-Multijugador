@@ -87,7 +87,7 @@ namespace Offline
 
                 // If has a team tag (Blue/Red) and both the shell and the TankHealth have the same tag
                 // then is fire friendly, so no damage.
-                if (GameManager.IsTeamsGame) {
+                if (GameManager.IsTeamsGame && GameManager.IsFriendlyFire) {
                     if (tag.Equals("Blue") || tag.Equals("Red"))
                         if (targetHealth.CompareTag(tag))
                             continue;

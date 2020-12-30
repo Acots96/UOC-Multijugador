@@ -10,7 +10,7 @@ namespace Offline
     public class UiButtonManager : MonoBehaviour
     {
         public GameObject mainMenuGO;
-        public Action<int, List<bool>> OnStartGame;
+        public Action<int, List<bool>, bool> OnStartGame;
 
         public GameObject transitionCamera;
 
@@ -18,6 +18,8 @@ namespace Offline
         public Button StartGameButton;
         private List<bool> playersAreBlue;
         private Color blue, red;
+
+        public Toggle FriendlyFireToggle;
 
         private void Awake() {
             blue = PlayersButtons[0].colors.disabledColor;
@@ -29,7 +31,7 @@ namespace Offline
         {
             ToggleMainMenu();
             ToggleTransitionCamera();
-            OnStartGame.Invoke(playerNumber, playersAreBlue);
+            OnStartGame.Invoke(playerNumber, playersAreBlue, FriendlyFireToggle.isOn);
         }
 
         public void ExitGame()

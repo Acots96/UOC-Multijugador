@@ -46,6 +46,8 @@ namespace Offline
         public enum GameTeam { NoTeam, Blue, Red }
         private int m_BlueWins, m_RedWins;
 
+        public static bool IsFriendlyFire { get; private set; }
+
         private void Start()
         {
             // Create the delays so they only have to be made once.
@@ -91,9 +93,11 @@ namespace Offline
         }
 
         // UiButtonManager triggers this event with the number of players as parameter
-        private void StartGameMethod(int playerNum, List<bool> playersAreBlue)
+        private void StartGameMethod(int playerNum, List<bool> playersAreBlue, bool friendlyFire)
         {
             m_ActualPlayersNum = playerNum;
+
+            IsFriendlyFire = friendlyFire;
 
             SpawnAllTanks(playersAreBlue);
             SetCameraTargets();
