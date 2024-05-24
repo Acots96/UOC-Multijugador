@@ -5,3 +5,7 @@ Realizada por:
 Aleix Cots Molina
 Joaquim Gifre Rosales
 Andrés López Torres
+
+------------------------------------------------------------------------
+
+Minijuego de tankes multijugador en tiempo real
